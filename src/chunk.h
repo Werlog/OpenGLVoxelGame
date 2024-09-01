@@ -1,0 +1,49 @@
+#pragma once
+
+#include "texturesheet.h"
+#include "blockpallete.h"
+#include "perlinNoiseLib/PerlinNoise.hpp"
+
+constexpr int CHUNK_SIZE_X = 16;
+constexpr int CHUNK_SIZE_Y = 256;
+constexpr int CHUNK_SIZE_Z = 16;
+
+struct ChunkCoord
+{
+	int x, y;
+
+	bool operator==(ChunkCoord other)
+	{
+		return this->x == other.x && this->y == other.y;
+	}
+};
+
+class World;
+
+class Chunk
+{
+public:
+	ChunkCoord position;
+	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
+
+	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv::PerlinNoise* noise);
+
+	void generateChunk();
+	unsigned char getBlockAt(int x, int y, int z);
+	unsigned char getGenerateBlockAt(int x, int y, int z); // Returns the block that should be generated at that coordinate
+
+	void updateMesh(TextureSheet& sheet);
+	void renderChunk();
+private:
+	unsigned int VAO;
+	unsigned int EBO;
+	unsigned int VBO;
+	BlockPalette* worldPallete;
+	siv::PerlinNoise* noise;
+	World* world;
+
+	int indicesCount;
+
+	void createMesh(std::vector<float>& vertexData, std::vector<int>& indices);
+	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
+};
