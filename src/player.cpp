@@ -51,7 +51,8 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	float dist = glm::distance(lastPos, position);
 	ImGui::Text("Distance: %f", dist);
 	ImGui::Text("Position: %f %f %f", position.x, position.y, position.z);
-	ImGui::Text("Chunk Coord: %d %d", (int)(position.x / CHUNK_SIZE_X), (int)(position.z / CHUNK_SIZE_Z));
+	ChunkCoord coord = ChunkCoord::toChunkCoord(position);
+	ImGui::Text("Chunk Coord: %d %d", coord.x, coord.y);
 	ImGui::End();
 
 	lastPos = position;

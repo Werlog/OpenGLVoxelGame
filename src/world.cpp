@@ -77,7 +77,7 @@ Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 
 unsigned char World::getBlockAt(int x, int y, int z)
 {
-	ChunkCoord coord = ChunkCoord{ x / CHUNK_SIZE_X, z / CHUNK_SIZE_Z };
+	ChunkCoord coord = ChunkCoord::toChunkCoord(glm::vec3(x, y, z));
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr) return 0;
 

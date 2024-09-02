@@ -16,6 +16,14 @@ struct ChunkCoord
 	{
 		return this->x == other.x && this->y == other.y;
 	}
+
+	static ChunkCoord toChunkCoord(const glm::vec3& aPos)
+	{
+		int x = (int)floor((aPos.x / CHUNK_SIZE_X));
+		int y = (int)floor((aPos.z / CHUNK_SIZE_Z));
+
+		return ChunkCoord{ x, y };
+	}
 };
 
 class World;
