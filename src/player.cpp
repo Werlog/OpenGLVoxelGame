@@ -38,9 +38,14 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 		velocity.y = 0.0f;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded)
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded && sinceJumped > playerJumpDelay)
 	{
-		velocity.y = 1050.0f * deltaTime;
+		velocity.y = 7.2f;
+		sinceJumped -= playerJumpDelay;
+	}
+	else
+	{
+		sinceJumped += deltaTime;
 	}
 
 	movementDirection += velocity;
