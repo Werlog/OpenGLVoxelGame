@@ -4,8 +4,10 @@
 #include <GLFW/glfw3.h>
 #include "imgui.h"
 
-constexpr float playerGravity = -9.81f;
+constexpr float playerGravity = -19.62f;
 constexpr float playerSpeed = 6.0f;
+constexpr float playerWidth = 0.6f;
+constexpr float playerHeight = 1.9f;
 
 class Player
 {
