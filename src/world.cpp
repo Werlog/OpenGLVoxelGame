@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <cmath>
+#include "profiling/codetimer.h"
 
 World::World(BlockPalette* pallete, TextureSheet* sheet, int shaderHandle)
 {
@@ -25,6 +26,7 @@ World::~World()
 
 void World::createWorld()
 {
+	CodeTimer createTimer = CodeTimer("World creation");
 	chunks.reserve(WORLD_SIZE_X * WORLD_SIZE_Z);
 
 	srand(time(NULL));
@@ -64,6 +66,7 @@ void World::renderWorld()
 
 void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 {
+	CodeTimer modTimer = CodeTimer("Block modification");
 	ChunkCoord coord = ChunkCoord::toChunkCoord(x, z);
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr) return;
