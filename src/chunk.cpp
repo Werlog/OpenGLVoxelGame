@@ -28,7 +28,7 @@ void Chunk::generateChunk()
 		{
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
-				blocks[x][y][z] = getGenerateBlockAt((position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
+				blocks[x][y][z] = getGenerateBlockAt(*noise, (position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
 			}
 		}
 	}
@@ -38,15 +38,21 @@ unsigned char Chunk::getBlockAt(int x, int y, int z)
 {
 	if (x > CHUNK_SIZE_X - 1 || x < 0 || y > CHUNK_SIZE_Y - 1 || y < 0 || z > CHUNK_SIZE_Z - 1 || z < 0) 
 	{
-		return getGenerateBlockAt((position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
+		return world->getBlockAt((position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z, true);
 	}
 	return blocks[x][y][z];
 }
 
-unsigned char Chunk::getGenerateBlockAt(int x, int y, int z)
+void Chunk::setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet)
+{
+	blocks[x][y][z] = blockType;
+	updateMesh(updateSheet);
+}
+
+unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z)
 {
 	int terrainHeight = 45;
-	float heightMod = noise->octave2D_01((double)x * 0.03, (double)z * 0.03, 2) * 35;
+	float heightMod = noise.octave2D_01((double)x * 0.03, (double)z * 0.03, 2) * 35;
 	int height = terrainHeight + heightMod;
 
 	if (y > height)

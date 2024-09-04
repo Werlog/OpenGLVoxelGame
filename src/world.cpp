@@ -62,6 +62,49 @@ void World::renderWorld()
 	}
 }
 
+void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
+{
+	ChunkCoord coord = ChunkCoord::toChunkCoord(x, z);
+	Chunk* chunk = getChunkByCoordinate(coord);
+	if (chunk == nullptr) return;
+
+	int chunkX = x - coord.x * CHUNK_SIZE_X;
+	int chunkZ = z - coord.y * CHUNK_SIZE_Z;
+	chunk->setBlockAt(chunkX, y, chunkZ, newBlockType, *sheet);
+	if (chunkX + 1 >= CHUNK_SIZE_X)
+	{
+		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{coord.x + 1, coord.y});
+		if (xChunk != nullptr)
+		{
+			xChunk->updateMesh(*sheet);
+		}
+	}
+	else if (chunkX - 1 <= 0)
+	{
+		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{ coord.x - 1, coord.y });
+		if (xChunk != nullptr)
+		{
+			xChunk->updateMesh(*sheet);
+		}
+	}
+	if (chunkZ + 1 >= CHUNK_SIZE_Z)
+	{
+		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{coord.x, coord.y + 1});
+		if (zChunk != nullptr)
+		{
+			zChunk->updateMesh(*sheet);
+		}
+	}
+	else if (chunkZ - 1 <= 0)
+	{
+		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{ coord.x, coord.y - 1 });
+		if (zChunk != nullptr)
+		{
+			zChunk->updateMesh(*sheet);
+		}
+	}
+}
+
 Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 {
 	for (size_t i = 0; i < chunks.size(); i++)
@@ -75,12 +118,17 @@ Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 	return nullptr;
 }
 
-unsigned char World::getBlockAt(int x, int y, int z)
+unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = false)
 {
+	if (y < 0 || y > CHUNK_SIZE_Y) return 0;
+
 	ChunkCoord coord = ChunkCoord::toChunkCoord(glm::vec3(x, y, z));
 	Chunk* chunk = getChunkByCoordinate(coord);
-	if (chunk == nullptr) return 0;
-
+	if (chunk == nullptr)
+	{
+		if (includeNotGenerated) return Chunk::getGenerateBlockAt(perlinNoise, x, y, z);
+		return 0;
+	}
 	return chunk->getBlockAt(x - coord.x * CHUNK_SIZE_X, y, z - coord.y * CHUNK_SIZE_Z);
 }
 

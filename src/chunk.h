@@ -19,8 +19,15 @@ struct ChunkCoord
 
 	static ChunkCoord toChunkCoord(const glm::vec3& aPos)
 	{
-		int x = (int)floor((aPos.x / CHUNK_SIZE_X));
-		int y = (int)floor((aPos.z / CHUNK_SIZE_Z));
+		int x = (int)floor(aPos.x / CHUNK_SIZE_X);
+		int y = (int)floor(aPos.z / CHUNK_SIZE_Z);
+
+		return ChunkCoord{ x, y };
+	}
+	static ChunkCoord toChunkCoord(int xPos, int zPos)
+	{
+		int x = (int)floor(xPos / CHUNK_SIZE_X);
+		int y = (int)floor(zPos / CHUNK_SIZE_Z);
 
 		return ChunkCoord{ x, y };
 	}
@@ -38,7 +45,8 @@ public:
 
 	void generateChunk();
 	unsigned char getBlockAt(int x, int y, int z);
-	unsigned char getGenerateBlockAt(int x, int y, int z); // Returns the block that should be generated at that coordinate
+	void setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet);
+	static unsigned char getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z); // Returns the block that should be generated at that coordinate
 
 	void updateMesh(TextureSheet& sheet);
 	void renderChunk();

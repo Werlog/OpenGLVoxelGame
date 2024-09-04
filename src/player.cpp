@@ -9,6 +9,8 @@ Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 6
 	this->position = glm::vec3(0, 80, 0);
 	colliding = false;
 	isGrounded = false;
+	sinceJumped = 0.0f;
+	sinceBlockBreak = 0.0f;
 	this->lastPos = position;
 	this->velocity = glm::vec3(0);
 }
@@ -18,6 +20,7 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	glm::vec3 inputDirection = calculateInputDirection(window);
 
 	checkGround(world);
+	blockBreakLogic(deltaTime, window, world);
 
 	glm::vec3 forward = glm::vec3(camera.front.x, camera.front.y, camera.front.z);
 	glm::vec3 right = glm::vec3(camera.right.x, camera.right.y, camera.right.z);
@@ -41,7 +44,7 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded && sinceJumped > playerJumpDelay)
 	{
 		velocity.y = 7.2f;
-		sinceJumped -= playerJumpDelay;
+		sinceJumped = 0.0f;
 	}
 	else
 	{
@@ -49,7 +52,6 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	}
 
 	movementDirection += velocity;
-
 
 	position += movementDirection * deltaTime;
 	resolveCollisions(world);
@@ -79,6 +81,31 @@ void Player::checkGround(World& world)
 	}
 }
 
+void Player::blockBreakLogic(float deltaTime, GLFWwindow* window, World& world)
+{
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && sinceBlockBreak > playerBreakDelay)
+	{
+		glm::vec3& front = camera.front;
+
+		for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.1f)
+		{
+			glm::vec3 checkPos = camera.position + front * checkDist;
+
+			unsigned char block = world.getBlockAt(checkPos.x, checkPos.y, checkPos.z, false);
+			if (block != 0)
+			{
+				world.modifyBlockAt(checkPos.x, checkPos.y, checkPos.z, 0);
+				break;
+			}
+		}
+		sinceBlockBreak = 0.0f;
+	}
+	else 
+	{
+		sinceBlockBreak += deltaTime;
+	}
+}
+
 void Player::resolveCollisions(World& world)
 {
 	/*
@@ -88,7 +115,7 @@ void Player::resolveCollisions(World& world)
 	*/
 	bool foundCollision = true;
 	int i = 0;
-	while (foundCollision && i < 50)
+	while (foundCollision && i < 25)
 	{
 		unsigned char collidingBlock = 0;
 		glm::vec3 blockPos;
@@ -130,6 +157,8 @@ void Player::resolveCollisions(World& world)
 				{
 					position.y += overlapY;
 				}
+
+				velocity.y = 0.0f;
 			}
 			else if (overlapX < overlapY && overlapX < overlapZ)
 			{

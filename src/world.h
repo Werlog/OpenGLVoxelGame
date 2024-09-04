@@ -13,7 +13,8 @@ public:
 
 	void createWorld();
 	void renderWorld();
-	unsigned char getBlockAt(int x, int y, int z);
+	void modifyBlockAt(int x, int y, int z, unsigned char newBlockType);
+	unsigned char getBlockAt(int x, int y, int z, bool includeNotGenerated);
 	unsigned char getBlockAt(float x, float y, float z);
 	Chunk* getChunkByCoordinate(ChunkCoord coord);
 private:
