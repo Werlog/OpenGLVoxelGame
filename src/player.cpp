@@ -10,7 +10,7 @@ Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 6
 	colliding = false;
 	isGrounded = false;
 	sinceJumped = 0.0f;
-	sinceBlockBreak = 0.0f;
+	sinceBlockModify = 0.0f;
 	this->lastPos = position;
 	this->velocity = glm::vec3(0);
 }
@@ -20,7 +20,9 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	glm::vec3 inputDirection = calculateInputDirection(window);
 
 	checkGround(world);
-	blockBreakLogic(deltaTime, window, world);
+	sinceBlockModify += deltaTime;
+	blockBreakLogic(window, world);
+	blockPlaceLogic(window, world);
 
 	glm::vec3 forward = glm::vec3(camera.front.x, camera.front.y, camera.front.z);
 	glm::vec3 right = glm::vec3(camera.right.x, camera.right.y, camera.right.z);
@@ -81,29 +83,69 @@ void Player::checkGround(World& world)
 	}
 }
 
-void Player::blockBreakLogic(float deltaTime, GLFWwindow* window, World& world)
+void Player::blockBreakLogic(GLFWwindow* window, World& world)
 {
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && sinceBlockBreak > playerBreakDelay)
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && sinceBlockModify > playerBlockModifyDelay)
 	{
-		glm::vec3& front = camera.front;
+		glm::vec3 blockPos = getLookingAtBlockPos(world);
+		world.modifyBlockAt(blockPos.x, blockPos.y, blockPos.z, 0);
+		sinceBlockModify = 0.0f;
+	}
+}
+// Sometimes still messes up and tries to place the block where it shouldn't but it works well enough.
+void Player::blockPlaceLogic(GLFWwindow* window, World& world)
+{
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_PRESS && sinceBlockModify > playerBlockModifyDelay)
+	{
+		glm::vec3 blockPos = getLookingAtBlockPos(world);
+		glm::vec3 center = glm::vec3(floor(blockPos.x) + 0.5f, floor(blockPos.y) + 0.5f, floor(blockPos.z) + 0.5f);
+		glm::vec3 direction = glm::normalize(center - blockPos);
 
-		for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.1f)
+		glm::vec3 compass[] =
 		{
-			glm::vec3 checkPos = camera.position + front * checkDist;
+			glm::vec3(1.0f, 0.0f, 0.0f),
+			glm::vec3(-1.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f),
+			glm::vec3(0.0f, -1.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f),
+			glm::vec3(0.0f, 0.0f, -1.0f),
+		};
 
-			unsigned char block = world.getBlockAt(checkPos.x, checkPos.y, checkPos.z, false);
-			if (block != 0)
+		glm::vec3& lowestDir = compass[0];
+		float lowestDot = 1.1f;
+		for (glm::vec3 dir : compass)
+		{
+			float dot = glm::dot(dir, direction);
+			if (dot < lowestDot)
 			{
-				world.modifyBlockAt(checkPos.x, checkPos.y, checkPos.z, 0);
-				break;
+				lowestDir = dir;
+				lowestDot = dot;
 			}
 		}
-		sinceBlockBreak = 0.0f;
+		if (world.getBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z) == 0)
+		{
+			world.modifyBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z, 3);
+			sinceBlockModify = 0.0f;
+		}
 	}
-	else 
+}
+
+glm::vec3 Player::getLookingAtBlockPos(World& world)
+{
+	glm::vec3& front = camera.front;
+
+	for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.05f)
 	{
-		sinceBlockBreak += deltaTime;
+		glm::vec3 checkPos = camera.position + front * checkDist;
+
+		unsigned char block = world.getBlockAt(checkPos.x, checkPos.y, checkPos.z, false);
+		if (block != 0)
+		{
+			return checkPos;
+		}
 	}
+
+	return glm::vec3(0);
 }
 
 void Player::resolveCollisions(World& world)

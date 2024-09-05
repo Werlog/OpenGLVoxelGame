@@ -9,7 +9,7 @@ constexpr float playerSpeed = 6.0f;
 constexpr float playerWidth = 0.6f;
 constexpr float playerHeight = 1.9f;
 constexpr float playerJumpDelay = 0.2f;
-constexpr float playerBreakDelay = 0.25f;
+constexpr float playerBlockModifyDelay = 0.2f;
 constexpr float playerReach = 5.0f;
 
 class Player
@@ -29,10 +29,12 @@ private:
 	glm::vec3 lastPos;
 
 	float sinceJumped;
-	float sinceBlockBreak;
+	float sinceBlockModify;
 
 	void checkGround(World& world);
-	void blockBreakLogic(float deltaTime, GLFWwindow* window, World& world);
+	void blockBreakLogic(GLFWwindow* window, World& world);
+	void blockPlaceLogic(GLFWwindow* window, World& world);
+	glm::vec3 getLookingAtBlockPos(World& world);
 	void resolveCollisions(World& world);
 	glm::vec3 calculateInputDirection(GLFWwindow* window);
 };
