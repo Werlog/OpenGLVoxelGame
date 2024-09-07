@@ -43,8 +43,8 @@ void Chunk::generateChunk()
 				float heightMod = noise->octave2D_01((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale, 2) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
-
-				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, 7));
+				float treeHeight = (1 - tree) * 30.0f;
+				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
 			}
 		}
 	}
