@@ -7,12 +7,18 @@ void BlockPalette::registerBlocks()
 	BlockType dirt = BlockType{ 2, 9, 9, 9, 9, 9, 9, true };
 	BlockType stone = BlockType{ 3, 5, 5, 5, 5, 5, 5, true };
 	BlockType bedrock = BlockType{ 4, 8, 8, 8, 8, 8, 8, true };
+	BlockType oaklog = BlockType{ 5, 2, 2, 2, 2, 3, 3, true };
+	BlockType cobblestone = BlockType{ 6, 6, 6, 6, 6, 6, 6, true };
+	BlockType oakplanks = BlockType{ 7, 7, 7, 7, 7, 7, 7, true };
 
 	pallete.insert({ air.id, air });
 	pallete.insert({ grass.id, grass });
 	pallete.insert({ dirt.id, dirt });
 	pallete.insert({ stone.id, stone });
 	pallete.insert({ bedrock.id, bedrock });
+	pallete.insert({ oaklog.id, oaklog });
+	pallete.insert({ cobblestone.id, cobblestone });
+	pallete.insert({ oakplanks.id, oakplanks });
 }
 
 BlockType BlockPalette::get(unsigned char blockId)

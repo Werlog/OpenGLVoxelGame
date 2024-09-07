@@ -11,6 +11,7 @@ Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 6
 	isGrounded = false;
 	sinceJumped = 0.0f;
 	sinceBlockModify = 0.0f;
+	selectedBlock = 1;
 	this->lastPos = position;
 	this->velocity = glm::vec3(0);
 }
@@ -71,6 +72,20 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	lastPos = position;
 }
 
+void Player::scrollBlockSelection(double yOffset)
+{
+	selectedBlock += yOffset;
+
+	if (selectedBlock == 0)
+	{
+		selectedBlock = 7;
+	}
+	else if (selectedBlock > 7)
+	{
+		selectedBlock = 1;
+	}
+}
+
 void Player::checkGround(World& world)
 {
 	for (float x = -0.3f; x <= 0.3f; x += 0.3f)
@@ -124,7 +139,7 @@ void Player::blockPlaceLogic(GLFWwindow* window, World& world)
 		}
 		if (world.getBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z) == 0)
 		{
-			world.modifyBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z, 3);
+			world.modifyBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z, selectedBlock);
 			sinceBlockModify = 0.0f;
 		}
 	}
@@ -157,13 +172,13 @@ void Player::resolveCollisions(World& world)
 	*/
 	bool foundCollision = true;
 	int i = 0;
-	while (foundCollision && i < 25)
+	while (foundCollision && i < 20)
 	{
 		unsigned char collidingBlock = 0;
 		glm::vec3 blockPos;
-		for (float x = -(playerWidth * 0.5f); x <= playerWidth * 0.5f; x += playerWidth)
+		for (float y = playerHeight; y >= 0; y -= playerHeight)
 		{
-			for (float y = 0; y <= playerHeight; y += playerHeight)
+			for (float x = -(playerWidth * 0.5f); x <= playerWidth * 0.5f; x += playerWidth)
 			{
 				for (float z = -(playerWidth * 0.5f); z <= playerWidth * 0.5f; z += playerWidth)
 				{
@@ -194,13 +209,12 @@ void Player::resolveCollisions(World& world)
 				if (position.y < blockPos.y)
 				{
 					position.y -= overlapY;
+					velocity.y = 0.0f;
 				}
 				else
 				{
 					position.y += overlapY;
 				}
-
-				velocity.y = 0.0f;
 			}
 			else if (overlapX < overlapY && overlapX < overlapZ)
 			{

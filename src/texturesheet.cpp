@@ -39,3 +39,8 @@ float TextureSheet::getOneUnitY() const
 {
 	return oneUnitY;
 }
+
+Texture* TextureSheet::getTexture() const
+{
+	return sheet;
+}

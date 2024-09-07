@@ -23,6 +23,11 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos)
 	game.mouseCallback(window, xPos, yPos);
 }
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	game.scrollCallback(window, xoffset, yoffset);
+}
+
 int main(void)
 {
 	if (!game.init())
@@ -33,6 +38,7 @@ int main(void)
 
 	glfwSetFramebufferSizeCallback(game.window, frame_buffer_size_callback);
 	glfwSetCursorPosCallback(game.window, mouse_callback);
+	glfwSetScrollCallback(game.window, scroll_callback);
 
 	game.gameLoop();
 

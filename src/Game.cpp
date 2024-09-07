@@ -171,3 +171,8 @@ void Game::mouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
 	player.camera.ProccessMouse(xPos, yPos, true);
 }
+
+void Game::scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+{
+	player.scrollBlockSelection(yOffset);
+}

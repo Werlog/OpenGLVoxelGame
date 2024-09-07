@@ -17,6 +17,7 @@ public:
 
 	void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 	void mouseCallback(GLFWwindow* window, double xPos, double yPos);
+	void scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 private:
 	float lastMouseX, lastMouseY;
 	Player player;

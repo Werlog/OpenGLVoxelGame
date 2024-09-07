@@ -55,6 +55,14 @@ unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, i
 	float heightMod = noise.octave2D_01((double)x * 0.03, (double)z * 0.03, 2) * 35;
 	int height = terrainHeight + heightMod;
 
+	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);
+	if (caveMultiplier < 0.6f) caveMultiplier = 0.6f;
+	float cavesMod = noise.noise3D((double)x * 0.04, (double)y * 0.08, (double)z * 0.04) * caveMultiplier;
+	if (cavesMod > 0.3f && y > 2)
+	{
+		return 0;
+	}
+
 	if (y > height)
 	{
 		return 0;

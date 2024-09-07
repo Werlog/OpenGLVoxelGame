@@ -22,11 +22,13 @@ public:
 	Player(bool usePhysics, float cameraAspectRatio);
 
 	void update(float deltaTime, GLFWwindow* window, World& world);
+	void scrollBlockSelection(double yOffset);
 private:
 	bool usePhysics;
 	bool isGrounded;
 	glm::vec3 velocity;
 	glm::vec3 lastPos;
+	unsigned char selectedBlock;
 
 	float sinceJumped;
 	float sinceBlockModify;

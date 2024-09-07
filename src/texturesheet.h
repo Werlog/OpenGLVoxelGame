@@ -12,6 +12,7 @@ public:
 	std::vector<float> getUVs(int textureNum);
 	float getOneUnitX() const;
 	float getOneUnitY() const;
+	Texture* getTexture() const;
 private:
 	Texture* sheet;
 	int textureWidth, textureHeight;
