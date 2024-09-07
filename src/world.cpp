@@ -32,7 +32,7 @@ void World::createWorld()
 
 	srand(time(NULL));
 
-	siv::PerlinNoise::seed_type seed = 0u;
+	siv::PerlinNoise::seed_type seed = rand() % RAND_MAX;
 
 	perlinNoise = siv::PerlinNoise(seed);
 

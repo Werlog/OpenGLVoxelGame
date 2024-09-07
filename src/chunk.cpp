@@ -37,8 +37,8 @@ void Chunk::generateChunk()
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
 		{
-			float tree = noise->noise2D((double)x * 0.5, (double)z * 0.5);
-			if (tree > 0.65f)
+			float tree = noise->noise2D((double)((position.x * CHUNK_SIZE_X) + x) * 0.5, (double)((position.y * CHUNK_SIZE_Z) + z) * 0.5);
+			if (tree > 0.7f)
 			{
 				float heightMod = noise->octave2D_01((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale, 2) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
