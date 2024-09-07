@@ -32,6 +32,22 @@ void Chunk::generateChunk()
 			}
 		}
 	}
+
+	for (int x = 0; x < CHUNK_SIZE_X; x++)
+	{
+		for (int z = 0; z < CHUNK_SIZE_Z; z++)
+		{
+			float tree = noise->noise2D((double)x * 0.5, (double)z * 0.5);
+			if (tree > 0.65f)
+			{
+				float heightMod = noise->octave2D_01((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale, 2) * heightNoiseMultiplier;
+				int height = terrainHeight + heightMod;
+				if (blocks[x][height][z] == 0) continue;
+
+				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, 7));
+			}
+		}
+	}
 }
 
 unsigned char Chunk::getBlockAt(int x, int y, int z)
@@ -49,10 +65,44 @@ void Chunk::setBlockAt(int x, int y, int z, unsigned char blockType, TextureShee
 	updateMesh(updateSheet);
 }
 
+void Chunk::setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType)
+{
+	blocks[x][y][z] = blockType;
+}
+
+std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int height)
+{
+	std::vector<BlockMod> tree = std::vector<BlockMod>();
+
+	for (int y = 0; y < height; y++)
+	{
+		if (y < height - 1)
+			tree.push_back(BlockMod{xPos, yPos + y, zPos, 5});
+
+		if (y > height - 5)
+		{
+			int size = 3;
+			if (y >= height - 4) size = 3;
+			if (y >= height - 2) size = 2;
+			if (y == height - 1) size = 1;
+			for (int x = -size; x <= size; x++)
+			{
+				for (int z = -size; z <= size; z++)
+				{
+					if (x == 0 && z == 0 && y != height - 1) continue;
+
+					tree.push_back(BlockMod{xPos + x, yPos + y, zPos + z, 8});
+				}
+			}
+		}
+	}
+
+	return tree;
+}
+
 unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z)
 {
-	int terrainHeight = 45;
-	float heightMod = noise.octave2D_01((double)x * 0.03, (double)z * 0.03, 2) * 35;
+	float heightMod = noise.octave2D_01((double)x * heightNoiseScale, (double)z * heightNoiseScale, 2) * heightNoiseMultiplier;
 	int height = terrainHeight + heightMod;
 
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);

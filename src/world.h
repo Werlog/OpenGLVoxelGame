@@ -13,6 +13,8 @@ public:
 
 	void createWorld();
 	void renderWorld();
+	void addBlockMods(std::vector<BlockMod>& mods);
+	void applyBlockMods();
 	void modifyBlockAt(int x, int y, int z, unsigned char newBlockType);
 	unsigned char getBlockAt(int x, int y, int z, bool includeNotGenerated);
 	unsigned char getBlockAt(float x, float y, float z);
@@ -22,6 +24,7 @@ private:
 	int shaderModelLoc;
 
 	std::vector<Chunk*> chunks;
+	std::vector<BlockMod> blocksToGenerate;
 	TextureSheet* sheet;
 	BlockPalette* pallete;
 	siv::PerlinNoise perlinNoise;

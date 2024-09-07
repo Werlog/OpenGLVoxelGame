@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include "profiling/codetimer.h"
 
@@ -31,7 +32,7 @@ void World::createWorld()
 
 	srand(time(NULL));
 
-	siv::PerlinNoise::seed_type seed = rand() % 100000;
+	siv::PerlinNoise::seed_type seed = 0u;
 
 	perlinNoise = siv::PerlinNoise(seed);
 
@@ -47,6 +48,7 @@ void World::createWorld()
 			chunks.push_back(chunk);
 		}
 	}
+	applyBlockMods();
 }
 
 void World::renderWorld()
@@ -61,6 +63,49 @@ void World::renderWorld()
 		glUniformMatrix4fv(shaderModelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		chunk->renderChunk();
+	}
+}
+
+void World::addBlockMods(std::vector<BlockMod>& mods)
+{
+	for (BlockMod mod : mods)
+	{
+		blocksToGenerate.push_back(mod);
+	}
+}
+
+void World::applyBlockMods()
+{
+	std::cout << blocksToGenerate.size() << std::endl;
+	std::vector<Chunk*> chunksToUpdate;
+
+	for (int i = 0; i < blocksToGenerate.size(); i++)
+	{
+		BlockMod& blockMod = blocksToGenerate[i];
+		ChunkCoord coord = ChunkCoord::toChunkCoord(blockMod.blockX, blockMod.blockZ);
+		Chunk* chunk = getChunkByCoordinate(coord);
+		if (chunk == nullptr) continue;
+
+		int chunkX = blockMod.blockX - coord.x * CHUNK_SIZE_X;
+		int chunkZ = blockMod.blockZ - coord.y * CHUNK_SIZE_Z;
+		if (chunkX < 0 || chunkZ < 0)
+		{
+			continue;
+		}
+		chunk->setBlockAtDontUpdate(chunkX, blockMod.blockY, chunkZ, blockMod.blockType);
+
+		if (std::find(chunksToUpdate.begin(), chunksToUpdate.end(), chunk) == chunksToUpdate.end())
+		{
+			chunksToUpdate.push_back(chunk);
+		}
+
+		blocksToGenerate.erase(blocksToGenerate.begin() + i);
+		i--;
+	}
+
+	for (Chunk* chunk : chunksToUpdate)
+	{
+		chunk->updateMesh(*sheet);
 	}
 }
 

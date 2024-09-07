@@ -8,6 +8,10 @@ constexpr int CHUNK_SIZE_X = 16;
 constexpr int CHUNK_SIZE_Y = 256;
 constexpr int CHUNK_SIZE_Z = 16;
 
+constexpr int terrainHeight = 45;
+constexpr double heightNoiseScale = 0.03;
+constexpr double heightNoiseMultiplier = 35;
+
 struct ChunkCoord
 {
 	int x, y;
@@ -33,6 +37,12 @@ struct ChunkCoord
 	}
 };
 
+struct BlockMod
+{
+	int blockX, blockY, blockZ;
+	unsigned char blockType;
+};
+
 class World;
 
 class Chunk
@@ -46,6 +56,8 @@ public:
 	void generateChunk();
 	unsigned char getBlockAt(int x, int y, int z);
 	void setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet);
+	void setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType);
+	std::vector<BlockMod> generateTree(int x, int y, int z, int height);
 	static unsigned char getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z); // Returns the block that should be generated at that coordinate
 
 	void updateMesh(TextureSheet& sheet);
