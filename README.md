@@ -12,6 +12,17 @@ Right Click - Place block
 
 Scroll - swap between blocks
 
+## Current Features
+- Procedural World Generation
+- Trees
+- Block Placing and Breaking
+- Player Movement and Player collision
+
+## Planned Features
+- Infinite world generation
+- Improved terrain generation (using splines)
+- HUD (showing current picked block and a crosshair)
+
 ## Screenshots
 
 ![In-Game Screenshot](https://github.com/Werlog/OpenGLVoxelGame/blob/d8dcd0f87089f48ca15c8244f2cc827de91ca858/images/screenshot.png)
