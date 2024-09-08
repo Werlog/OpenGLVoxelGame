@@ -101,7 +101,7 @@ void Game::gameLoop()
 
 	glUseProgram(shader.getProgramHandle());
 
-	World world = World(&pallete, &sheet, shader.getProgramHandle());
+	World world = World(&pallete, &sheet, player, shader.getProgramHandle());
 	world.createWorld();
 	timer.tick();
 	
@@ -129,7 +129,8 @@ void Game::gameLoop()
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(player.camera.getViewMatrix()));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(player.camera.getProjectionMatrix()));
 
-		world.renderWorld();
+		world.update(player, timer.deltaTime);
+		world.renderWorld(player);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

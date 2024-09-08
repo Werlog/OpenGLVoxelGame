@@ -12,6 +12,8 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv:
 	this->position = position;
 	this->noise = noise;
 	this->world = world;
+	this->modified = false;
+
 
 	std::memset(blocks, 0, sizeof(blocks));
 
@@ -19,6 +21,22 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv:
 	EBO = 0;
 	VBO = 0;
 	indicesCount = 0;
+}
+
+Chunk::~Chunk()
+{
+	if (VBO != 0)
+	{
+		glDeleteBuffers(1, &VBO);
+	}
+	if (EBO != 0)
+	{
+		glDeleteBuffers(1, &EBO);
+	}
+	if (VAO != 0)
+	{
+		glDeleteVertexArrays(1, &VAO);
+	}
 }
 
 void Chunk::generateChunk()

@@ -17,6 +17,7 @@ class Player
 public:
 	Camera camera;
 	glm::vec3 position;
+	glm::vec3 velocity;
 	bool colliding;
 
 	Player(bool usePhysics, float cameraAspectRatio);
@@ -26,7 +27,6 @@ public:
 private:
 	bool usePhysics;
 	bool isGrounded;
-	glm::vec3 velocity;
 	glm::vec3 lastPos;
 	unsigned char selectedBlock;
 

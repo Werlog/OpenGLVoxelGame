@@ -21,6 +21,11 @@ struct ChunkCoord
 		return this->x == other.x && this->y == other.y;
 	}
 
+	bool operator!=(ChunkCoord other)
+	{
+		return this->x != other.x || this->y != other.y;
+	}
+
 	static ChunkCoord toChunkCoord(const glm::vec3& aPos)
 	{
 		int x = (int)floor(aPos.x / CHUNK_SIZE_X);
@@ -30,8 +35,8 @@ struct ChunkCoord
 	}
 	static ChunkCoord toChunkCoord(int xPos, int zPos)
 	{
-		int x = (int)floor(xPos / CHUNK_SIZE_X);
-		int y = (int)floor(zPos / CHUNK_SIZE_Z);
+		int x = (int)floor(xPos / (float)CHUNK_SIZE_X);
+		int y = (int)floor(zPos / (float)CHUNK_SIZE_Z);
 
 		return ChunkCoord{ x, y };
 	}
@@ -55,9 +60,11 @@ class Chunk
 {
 public:
 	ChunkCoord position;
+	bool modified;
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
 	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv::PerlinNoise* noise);
+	~Chunk();
 
 	void generateChunk();
 	unsigned char getBlockAt(int x, int y, int z);
@@ -75,6 +82,7 @@ private:
 	BlockPalette* worldPallete;
 	siv::PerlinNoise* noise;
 	World* world;
+
 
 	int indicesCount;
 

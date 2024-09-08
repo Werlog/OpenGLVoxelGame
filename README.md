@@ -14,12 +14,14 @@ Scroll - swap between blocks
 
 ## Current Features
 - Procedural World Generation
-- Trees
+	- Infinite world generation
+	- Caves
+	- Trees
 - Block Placing and Breaking
 - Player Movement and Player collision
 
 ## Planned Features
-- Infinite world generation
+- Improved performance when generating chunks
 - Improved terrain generation (using splines)
 - HUD (showing current picked block and a crosshair)
 

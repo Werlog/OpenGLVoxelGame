@@ -8,7 +8,7 @@
 Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 60, 0), 60, cameraAspectRatio, 10.0f)
 {
 	this->usePhysics = usePhysics;
-	this->position = glm::vec3(0, 80, 0);
+	this->position = glm::vec3(0);
 	colliding = false;
 	isGrounded = false;
 	sinceJumped = 0.0f;
@@ -58,6 +58,12 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 
 	movementDirection += velocity;
 
+	if (position.y < 0)
+	{
+		position.y = 100;
+		velocity.y = 0.5f;
+	}
+
 	position += movementDirection * deltaTime;
 	resolveCollisions(world);
 
@@ -69,6 +75,8 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	ImGui::Text("Position: %f %f %f", position.x, position.y, position.z);
 	ChunkCoord coord = ChunkCoord::toChunkCoord(position);
 	ImGui::Text("Chunk Coord: %d %d", coord.x, coord.y);
+	glm::vec3 blockPos = getLookingAtBlockPos(world);
+	ImGui::Text("Looking at: %f %f %f", blockPos.x, blockPos.y, blockPos.z);
 	ImGui::End();
 
 	lastPos = position;
@@ -106,7 +114,7 @@ void Player::blockBreakLogic(GLFWwindow* window, World& world)
 	{
 		CodeTimer modTimer = CodeTimer("Block break");
 		glm::vec3 blockPos = getLookingAtBlockPos(world);
-		world.modifyBlockAt(blockPos.x, blockPos.y, blockPos.z, 0);
+		world.modifyBlockAt((int)floor(blockPos.x), (int)floor(blockPos.y), (int)floor(blockPos.z), 0);
 		sinceBlockModify = 0.0f;
 	}
 }
@@ -142,7 +150,7 @@ void Player::blockPlaceLogic(GLFWwindow* window, World& world)
 		}
 		if (world.getBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z) == 0)
 		{
-			world.modifyBlockAt(blockPos.x + lowestDir.x, blockPos.y + lowestDir.y, blockPos.z + lowestDir.z, selectedBlock);
+			world.modifyBlockAt((int)floor(blockPos.x + lowestDir.x), (int)floor(blockPos.y + lowestDir.y), (int)floor(blockPos.z + lowestDir.z), selectedBlock);
 			sinceBlockModify = 0.0f;
 		}
 	}
@@ -152,11 +160,11 @@ glm::vec3 Player::getLookingAtBlockPos(World& world)
 {
 	glm::vec3& front = camera.front;
 
-	for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.01f)
+	for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.05f)
 	{
 		glm::vec3 checkPos = camera.position + front * checkDist;
 
-		unsigned char block = world.getBlockAt(checkPos.x, checkPos.y, checkPos.z, false);
+		unsigned char block = world.getBlockAt(checkPos.x, checkPos.y, checkPos.z);
 		if (block != 0)
 		{
 			return checkPos;
@@ -203,8 +211,8 @@ void Player::resolveCollisions(World& world)
 			float overlapX = std::min(position.x + playerWidth * 0.5f, blockPos.x + 1.0f) - std::max(position.x - playerWidth * 0.5f, blockPos.x);
 			float overlapY = std::min(position.y + playerHeight, blockPos.y + 1.0f) - std::max(position.y, blockPos.y);
 			float overlapZ = std::min(position.z + playerWidth * 0.5f, blockPos.z + 1.0f) - std::max(position.z - playerWidth * 0.5f, blockPos.z);
-			overlapX += 0.001f;
-			overlapZ += 0.001f;
+			overlapX += 0.002f;
+			overlapZ += 0.002f;
 
 
 			if (overlapY < overlapX && overlapY < overlapZ)

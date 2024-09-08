@@ -7,59 +7,131 @@
 #include <algorithm>
 #include <cmath>
 #include "profiling/codetimer.h"
+#include "player.h"
 
-World::World(BlockPalette* pallete, TextureSheet* sheet, int shaderHandle)
+World::World(BlockPalette* pallete, TextureSheet* sheet, Player& player, int shaderHandle)
 {
 	this->pallete = pallete;
 	this->sheet = sheet;
 	this->shaderProgram = shaderHandle;
+
+	lastPlayerChunkCoord = ChunkCoord::toChunkCoord(player.position);
+	sinceLoadedChunk = 0.0f;
+
+	isFirstTimeLoading = true;
 
 	shaderModelLoc = glGetUniformLocation(shaderProgram, "model");
 }
 
 World::~World()
 {
-	for (size_t i = 0; i < chunks.size(); i++)
+	for (size_t i = 0; i < loadedChunks.size(); i++)
 	{
-		delete chunks[i];
+		delete loadedChunks[i];
 	}
 }
 
 void World::createWorld()
 {
 	CodeTimer createTimer = CodeTimer("World creation");
-	chunks.reserve(WORLD_SIZE_X * WORLD_SIZE_Z);
+	loadedChunks.reserve(RENDER_DISTANCE * RENDER_DISTANCE);
 
 	srand(time(NULL));
 
-	siv::PerlinNoise::seed_type seed = rand() % RAND_MAX;
+	siv::PerlinNoise::seed_type seed = 0u;
 
 	perlinNoise = siv::PerlinNoise(seed);
 
-	for (int x = 0; x < WORLD_SIZE_X; x++)
-	{
-		for (int z = 0;  z < WORLD_SIZE_Z;  z++)
-		{
-			ChunkCoord coord = ChunkCoord{ x, z };
-			Chunk* chunk = new Chunk(pallete, this, coord, &perlinNoise);
-			chunk->generateChunk();
+	updateLoadedChunks(lastPlayerChunkCoord);
+}
 
-			chunks.push_back(chunk);
-		}
+void World::update(Player& player, float deltaTime)
+{
+	if (isFirstTimeLoading)
+	{
+		player.position.y = 80.0f;
+		player.velocity.y = 0.0f;
 	}
-	applyBlockMods(false);
-
-	for (Chunk* chunk : chunks)
+	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
+	if (playerCoord != lastPlayerChunkCoord)
 	{
+		updateLoadedChunks(playerCoord);
+
+		lastPlayerChunkCoord = playerCoord;
+	}
+
+	if (!chunksToLoad.empty() && sinceLoadedChunk > loadChunkDelay)
+	{
+		Chunk* chunk = chunksToLoad.front();
+		chunksToLoad.pop();
+		if (getChunkByCoordinate(chunk->position) != nullptr) return;
+
+		chunk->generateChunk();
 		chunk->updateMesh(*sheet);
+
+		applyBlockMods(true);
+
+
+		if (isFirstTimeLoading && chunksToLoad.empty())
+		{
+			isFirstTimeLoading = false;
+		}
+
+		loadedChunks.push_back(chunk);
+		sinceLoadedChunk = 0.0f;
+	}
+	else
+	{
+		sinceLoadedChunk += deltaTime;
 	}
 }
 
-void World::renderWorld()
+void World::updateLoadedChunks(ChunkCoord& playerCoord)
 {
-	for (size_t i = 0; i < chunks.size(); i++)
+	for (int x = -(RENDER_DISTANCE / 2); x < RENDER_DISTANCE / 2; x++)
 	{
-		Chunk* chunk = chunks[i];
+		for (int z = -(RENDER_DISTANCE / 2); z < (RENDER_DISTANCE / 2); z++) 
+		{
+			ChunkCoord coord = ChunkCoord{ playerCoord.x + x, playerCoord.y + z };
+			Chunk* unloaded = getUnloadedChunkByCoordinate(coord);
+			if (getChunkByCoordinate(coord) == nullptr && unloaded == nullptr)
+			{
+				Chunk* chunk = new Chunk(pallete, this, coord, &perlinNoise);
+				chunksToLoad.push(chunk);
+			}
+			else if (unloaded != nullptr)
+			{
+				unloadedChunks.erase(std::remove(unloadedChunks.begin(), unloadedChunks.end(), unloaded), unloadedChunks.end());
+				loadedChunks.push_back(unloaded);
+			}
+		}
+	}
+
+	for (int i = 0; i < loadedChunks.size(); i++)
+	{
+		Chunk* chunk = loadedChunks[i];
+		if (abs(chunk->position.x - playerCoord.x) > RENDER_DISTANCE / 2
+			|| abs(chunk->position.y - playerCoord.y) > RENDER_DISTANCE / 2)
+		{
+			if (chunk->modified)
+			{
+				unloadedChunks.push_back(chunk);
+			}
+			else
+			{
+				delete chunk;
+			}
+			loadedChunks.erase(loadedChunks.begin() + i);
+			i--;
+		}
+	}
+}
+
+void World::renderWorld(Player& player)
+{
+	for (size_t i = 0; i < loadedChunks.size(); i++)
+	{
+		Chunk* chunk = loadedChunks[i];
 		ChunkCoord coord = chunk->position;
 
 		glm::mat4 model = glm::mat4(1.0f);
@@ -80,7 +152,6 @@ void World::addBlockMods(std::vector<BlockMod>& mods)
 
 void World::applyBlockMods(bool updateChunks = true)
 {
-	std::cout << blocksToGenerate.size() << std::endl;
 	std::vector<Chunk*> chunksToUpdate;
 
 	for (int i = 0; i < blocksToGenerate.size(); i++)
@@ -117,11 +188,11 @@ void World::applyBlockMods(bool updateChunks = true)
 
 void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 {
-	if (getBlockAt(x, y, z) == newBlockType) return;
 	ChunkCoord coord = ChunkCoord::toChunkCoord(x, z);
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr) return;
 
+	chunk->modified = true;
 	int chunkX = x - coord.x * CHUNK_SIZE_X;
 	int chunkZ = z - coord.y * CHUNK_SIZE_Z;
 	chunk->setBlockAt(chunkX, y, chunkZ, newBlockType, *sheet);
@@ -161,11 +232,24 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 
 Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 {
-	for (size_t i = 0; i < chunks.size(); i++)
+	for (size_t i = 0; i < loadedChunks.size(); i++)
 	{
-		if (chunks[i]->position == coord)
+		if (loadedChunks[i]->position == coord)
 		{
-			return chunks[i];
+			return loadedChunks[i];
+		}
+	}
+
+	return nullptr;
+}
+
+Chunk* World::getUnloadedChunkByCoordinate(ChunkCoord coord)
+{
+	for (size_t i = 0; i < unloadedChunks.size(); i++)
+	{
+		if (unloadedChunks[i]->position == coord)
+		{
+			return unloadedChunks[i];
 		}
 	}
 
