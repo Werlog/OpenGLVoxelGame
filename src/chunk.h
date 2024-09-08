@@ -43,6 +43,12 @@ struct BlockMod
 	unsigned char blockType;
 };
 
+struct ChunkVertex 
+{
+	int posData;
+	float u, v;
+};
+
 class World;
 
 class Chunk
@@ -72,6 +78,6 @@ private:
 
 	int indicesCount;
 
-	void createMesh(std::vector<float>& vertexData, std::vector<int>& indices);
+	void createMesh(std::vector<ChunkVertex>& vertexData, std::vector<int>& indices);
 	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
 };

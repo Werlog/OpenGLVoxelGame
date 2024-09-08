@@ -1,7 +1,7 @@
 #version 330 core
 
-layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec2 aTexCoord;
+layout (location = 0) in int data;
+layout (location = 1) in vec2 uvData;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -11,6 +11,10 @@ out vec2 ourTexCoord;
 
 void main()
 {
-	gl_Position = projection * view * model * vec4(aPosition, 1);
-	ourTexCoord = aTexCoord;
+	int positionX = data & 31;
+	int positionY = (data >> 5) & 511;
+	int positionZ = (data >> 14) & 31;
+
+	gl_Position = projection * view * model * vec4(positionX, positionY, positionZ, 1);
+	ourTexCoord = uvData;
 }

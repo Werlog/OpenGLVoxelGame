@@ -43,12 +43,16 @@ void World::createWorld()
 			ChunkCoord coord = ChunkCoord{ x, z };
 			Chunk* chunk = new Chunk(pallete, this, coord, &perlinNoise);
 			chunk->generateChunk();
-			chunk->updateMesh(*sheet);
 
 			chunks.push_back(chunk);
 		}
 	}
-	applyBlockMods();
+	applyBlockMods(false);
+
+	for (Chunk* chunk : chunks)
+	{
+		chunk->updateMesh(*sheet);
+	}
 }
 
 void World::renderWorld()
@@ -59,7 +63,7 @@ void World::renderWorld()
 		ChunkCoord coord = chunk->position;
 
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(coord.x * CHUNK_SIZE_X, 0, coord.y * CHUNK_SIZE_Z + 1));
+		model = glm::translate(model, glm::vec3(coord.x * CHUNK_SIZE_X, 0, coord.y * CHUNK_SIZE_Z));
 		glUniformMatrix4fv(shaderModelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		chunk->renderChunk();
@@ -74,7 +78,7 @@ void World::addBlockMods(std::vector<BlockMod>& mods)
 	}
 }
 
-void World::applyBlockMods()
+void World::applyBlockMods(bool updateChunks = true)
 {
 	std::cout << blocksToGenerate.size() << std::endl;
 	std::vector<Chunk*> chunksToUpdate;
@@ -94,7 +98,7 @@ void World::applyBlockMods()
 		}
 		chunk->setBlockAtDontUpdate(chunkX, blockMod.blockY, chunkZ, blockMod.blockType);
 
-		if (std::find(chunksToUpdate.begin(), chunksToUpdate.end(), chunk) == chunksToUpdate.end())
+		if (updateChunks && std::find(chunksToUpdate.begin(), chunksToUpdate.end(), chunk) == chunksToUpdate.end())
 		{
 			chunksToUpdate.push_back(chunk);
 		}
@@ -102,16 +106,18 @@ void World::applyBlockMods()
 		blocksToGenerate.erase(blocksToGenerate.begin() + i);
 		i--;
 	}
-
-	for (Chunk* chunk : chunksToUpdate)
+	if (updateChunks)
 	{
-		chunk->updateMesh(*sheet);
+		for (Chunk* chunk : chunksToUpdate)
+		{
+			chunk->updateMesh(*sheet);
+		}
 	}
 }
 
 void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 {
-	CodeTimer modTimer = CodeTimer("Block modification");
+	if (getBlockAt(x, y, z) == newBlockType) return;
 	ChunkCoord coord = ChunkCoord::toChunkCoord(x, z);
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr) return;

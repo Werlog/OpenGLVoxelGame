@@ -4,6 +4,7 @@
 #include "voxeldata.h"
 #include <vector>
 #include <iostream>
+#include "profiling/codetimer.h"
 
 Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv::PerlinNoise* noise)
 {
@@ -33,17 +34,19 @@ void Chunk::generateChunk()
 		}
 	}
 
+	
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
 		{
-			float tree = noise->noise2D((double)((position.x * CHUNK_SIZE_X) + x) * 0.5, (double)((position.y * CHUNK_SIZE_Z) + z) * 0.5);
-			if (tree > 0.7f)
+			float tree = noise->noise2D((double)((position.x * CHUNK_SIZE_X) + x) * 0.6, (double)((position.y * CHUNK_SIZE_Z) + z) * 0.6);
+			if (tree > 0.67f)
 			{
 				float heightMod = noise->octave2D_01((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale, 2) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
 				float treeHeight = (1 - tree) * 30.0f;
+				if (treeHeight < 4.0f) treeHeight = 4.0f;
 				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
 			}
 		}
@@ -106,9 +109,9 @@ unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, i
 	int height = terrainHeight + heightMod;
 
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);
-	if (caveMultiplier < 0.6f) caveMultiplier = 0.6f;
-	float cavesMod = noise.noise3D((double)x * 0.04, (double)y * 0.08, (double)z * 0.04) * caveMultiplier;
-	if (cavesMod > 0.3f && y > 2)
+	if (caveMultiplier < 0.45f) caveMultiplier = 0.45f;
+	float cavesMod = noise.noise3D((double)x * 0.02, (double)y * 0.04, (double)z * 0.02) * caveMultiplier;
+	if (cavesMod > 0.25f && y > 2)
 	{
 		return 0;
 	}
@@ -139,7 +142,7 @@ unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, i
 
 void Chunk::updateMesh(TextureSheet& textureSheet)
 {
-	std::vector<float> vertexData;
+	std::vector<ChunkVertex> vertexData;
 	std::vector<int> indices;
 	int curIndex = 0;
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
@@ -168,15 +171,14 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 
 					std::vector<float> uvs = textureSheet.getUVs(getTextureNumberFromFaceIndex(currentBlock, faceIndex));
 
-
 					int uvCounter = 0;
 					for (size_t i = faceIndex * 12; i < (faceIndex + 1) * 12; i += 3)
 					{
-						vertexData.push_back(voxelVerts[i] + x);
-						vertexData.push_back(voxelVerts[i + 1] + y);
-						vertexData.push_back(voxelVerts[i + 2] + z);
-						vertexData.push_back(uvs[uvCounter]);
-						vertexData.push_back(uvs[uvCounter + 1]);
+						int posX = voxelVerts[i] + x;
+						int posY = voxelVerts[i + 1] + y;
+						int posZ = voxelVerts[i + 2] + z + 1;
+
+						vertexData.push_back(ChunkVertex{ posX | posY << 5 | posZ << 14, uvs[uvCounter], uvs[uvCounter + 1]});
 
 						uvCounter += 2;
 					}
@@ -195,11 +197,12 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 	}
 
 	indicesCount = indices.size();
+	int bytesUsed = vertexData.size() * sizeof(float) + indicesCount * sizeof(int);
 
 	createMesh(vertexData, indices);
 }
 
-void Chunk::createMesh(std::vector<float>& vertexData, std::vector<int>& indices)
+void Chunk::createMesh(std::vector<ChunkVertex>& vertexData, std::vector<int>& indices)
 {
 	if (VAO == 0)
 	{
@@ -220,9 +223,9 @@ void Chunk::createMesh(std::vector<float>& vertexData, std::vector<int>& indices
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	
-	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(ChunkVertex), vertexData.data(), GL_DYNAMIC_DRAW);
+	glVertexAttribIPointer(0, 1, GL_INT, sizeof(ChunkVertex), 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ChunkVertex), (void*)sizeof(int));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 }

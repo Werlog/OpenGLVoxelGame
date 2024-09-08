@@ -8,7 +8,7 @@ enum CameraMovement {
 };
 
 constexpr float nearPlane = 0.1f;
-constexpr float farPlane = 300.0f;
+constexpr float farPlane = 1000.0f;
 
 class Camera {
 public:

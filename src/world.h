@@ -14,7 +14,7 @@ public:
 	void createWorld();
 	void renderWorld();
 	void addBlockMods(std::vector<BlockMod>& mods);
-	void applyBlockMods();
+	void applyBlockMods(bool updateChunks);
 	void modifyBlockAt(int x, int y, int z, unsigned char newBlockType);
 	unsigned char getBlockAt(int x, int y, int z, bool includeNotGenerated);
 	unsigned char getBlockAt(float x, float y, float z);

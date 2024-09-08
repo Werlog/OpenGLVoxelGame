@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <cmath>
+#include "profiling/codetimer.h"
 
 Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 60, 0), 60, cameraAspectRatio, 10.0f)
 {
@@ -102,6 +104,7 @@ void Player::blockBreakLogic(GLFWwindow* window, World& world)
 {
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && sinceBlockModify > playerBlockModifyDelay)
 	{
+		CodeTimer modTimer = CodeTimer("Block break");
 		glm::vec3 blockPos = getLookingAtBlockPos(world);
 		world.modifyBlockAt(blockPos.x, blockPos.y, blockPos.z, 0);
 		sinceBlockModify = 0.0f;
@@ -149,7 +152,7 @@ glm::vec3 Player::getLookingAtBlockPos(World& world)
 {
 	glm::vec3& front = camera.front;
 
-	for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.05f)
+	for (float checkDist = 0; checkDist <= playerReach; checkDist += 0.01f)
 	{
 		glm::vec3 checkPos = camera.position + front * checkDist;
 
