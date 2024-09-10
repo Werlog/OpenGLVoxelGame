@@ -32,6 +32,7 @@ int main(void)
 {
 	if (!game.init())
 	{
+		std::cout << "Unable to launch the game." << std::endl;
 		glfwTerminate();
 		return 1;
 	}
