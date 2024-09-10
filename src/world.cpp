@@ -38,7 +38,7 @@ void World::createWorld()
 
 	srand(time(NULL));
 
-	siv::PerlinNoise::seed_type seed = 0u;
+	siv::PerlinNoise::seed_type seed = rand() % RAND_MAX;
 
 	perlinNoise = siv::PerlinNoise(seed);
 
@@ -88,9 +88,9 @@ void World::update(Player& player, float deltaTime)
 
 void World::updateLoadedChunks(ChunkCoord& playerCoord)
 {
-	for (int x = -(RENDER_DISTANCE / 2); x < RENDER_DISTANCE / 2; x++)
+	for (int x = -RENDER_DISTANCE; x < RENDER_DISTANCE; x++)
 	{
-		for (int z = -(RENDER_DISTANCE / 2); z < (RENDER_DISTANCE / 2); z++) 
+		for (int z = -RENDER_DISTANCE; z < RENDER_DISTANCE; z++) 
 		{
 			ChunkCoord coord = ChunkCoord{ playerCoord.x + x, playerCoord.y + z };
 			Chunk* unloaded = getUnloadedChunkByCoordinate(coord);
@@ -110,8 +110,8 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 	for (int i = 0; i < loadedChunks.size(); i++)
 	{
 		Chunk* chunk = loadedChunks[i];
-		if (abs(chunk->position.x - playerCoord.x) > RENDER_DISTANCE / 2
-			|| abs(chunk->position.y - playerCoord.y) > RENDER_DISTANCE / 2)
+		if (abs(chunk->position.x - playerCoord.x) > RENDER_DISTANCE
+			|| abs(chunk->position.y - playerCoord.y) > RENDER_DISTANCE)
 		{
 			if (chunk->modified)
 			{

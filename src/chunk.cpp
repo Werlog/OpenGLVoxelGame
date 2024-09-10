@@ -58,9 +58,9 @@ void Chunk::generateChunk()
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
 		{
 			float tree = noise->noise2D((double)((position.x * CHUNK_SIZE_X) + x) * 0.6, (double)((position.y * CHUNK_SIZE_Z) + z) * 0.6);
-			if (tree > 0.67f)
+			if (tree > 0.7f)
 			{
-				float heightMod = noise->octave2D_01((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale, 2) * heightNoiseMultiplier;
+				float heightMod = noise->noise2D((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
 				float treeHeight = (1 - tree) * 30.0f;
@@ -123,7 +123,7 @@ std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int heig
 
 unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z)
 {
-	float heightMod = noise.octave2D_01((double)x * heightNoiseScale, (double)z * heightNoiseScale, 2) * heightNoiseMultiplier;
+	float heightMod = noise.noise2D((double)x * heightNoiseScale, (double)z * heightNoiseScale) * heightNoiseMultiplier;
 	int height = terrainHeight + heightMod;
 
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);

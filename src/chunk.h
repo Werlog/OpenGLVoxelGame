@@ -10,7 +10,7 @@ constexpr int CHUNK_SIZE_Z = 16;
 
 constexpr int terrainHeight = 45;
 constexpr double heightNoiseScale = 0.03;
-constexpr double heightNoiseMultiplier = 35;
+constexpr double heightNoiseMultiplier = 25;
 
 struct ChunkCoord
 {

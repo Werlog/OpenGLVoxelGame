@@ -3,7 +3,7 @@
 #include "chunk.h"
 #include <queue>
 
-constexpr int RENDER_DISTANCE = 10;
+constexpr int RENDER_DISTANCE = 7;
 constexpr float loadChunkDelay = 0.0f;
 
 class Player;
