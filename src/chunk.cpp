@@ -6,7 +6,7 @@
 #include <iostream>
 #include "profiling/codetimer.h"
 
-Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv::PerlinNoise* noise)
+Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise)
 {
 	this->worldPallete = worldPallete;
 	this->position = position;
@@ -41,6 +41,7 @@ Chunk::~Chunk()
 
 void Chunk::generateChunk()
 {
+	CodeTimer c = CodeTimer("Chunk Gen");
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE_Y; y++)
@@ -57,14 +58,14 @@ void Chunk::generateChunk()
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
 		{
-			float tree = noise->noise2D((double)((position.x * CHUNK_SIZE_X) + x) * 0.6, (double)((position.y * CHUNK_SIZE_Z) + z) * 0.6);
-			if (tree > 0.7f)
+			float tree = noise->GetNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.y * CHUNK_SIZE_Z + z) * 30.0f);
+			if (tree > 0.73f)
 			{
-				float heightMod = noise->noise2D((double)(x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (double)(z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
+				float heightMod = noise->GetNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
 				float treeHeight = (1 - tree) * 30.0f;
-				if (treeHeight < 4.0f) treeHeight = 4.0f;
+				if (treeHeight < 5.0f) treeHeight = 5.0f;
 				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
 			}
 		}
@@ -94,6 +95,7 @@ void Chunk::setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType)
 std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int height)
 {
 	std::vector<BlockMod> tree = std::vector<BlockMod>();
+	tree.reserve(height + (height - 5) * 2);
 
 	for (int y = 0; y < height; y++)
 	{
@@ -121,15 +123,15 @@ std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int heig
 	return tree;
 }
 
-unsigned char Chunk::getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z)
+unsigned char Chunk::getGenerateBlockAt(FastNoiseLite& noise, int x, int y, int z)
 {
-	float heightMod = noise.noise2D((double)x * heightNoiseScale, (double)z * heightNoiseScale) * heightNoiseMultiplier;
+	float heightMod = noise.GetNoise(x * heightNoiseScale, z * heightNoiseScale) * heightNoiseMultiplier;
 	int height = terrainHeight + heightMod;
 
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);
-	if (caveMultiplier < 0.45f) caveMultiplier = 0.45f;
-	float cavesMod = noise.noise3D((double)x * 0.02, (double)y * 0.04, (double)z * 0.02) * caveMultiplier;
-	if (cavesMod > 0.25f && y > 2)
+	if (caveMultiplier < 0.75f) caveMultiplier = 0.75f;
+	float cavesMod = noise.GetNoise(x * 3.0f, y * 7.0f, z * 3.0f) * 1.0f;
+	if (cavesMod > 0.4f && y > 2)
 	{
 		return 0;
 	}
@@ -181,7 +183,7 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 					int checkY = faceChecks[checkIndex + 1] + y;
 					int checkZ = faceChecks[checkIndex + 2] + z;
 					
-					if (getBlockAt(checkX, checkY, checkZ) != 0)
+					if (worldPallete->get(getBlockAt(checkX, checkY, checkZ)).isSolid)
 					{
 						discardedFaces++;
 						continue;

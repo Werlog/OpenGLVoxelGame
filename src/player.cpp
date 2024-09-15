@@ -8,7 +8,7 @@
 Player::Player(bool usePhysics, float cameraAspectRatio) : camera(glm::vec3(0, 60, 0), 60, cameraAspectRatio, 10.0f)
 {
 	this->usePhysics = usePhysics;
-	this->position = glm::vec3(0, 0, 0);
+	this->position = glm::vec3(rand() % 100, 0, rand() % 100);
 	colliding = false;
 	isGrounded = false;
 	sinceJumped = 0.0f;

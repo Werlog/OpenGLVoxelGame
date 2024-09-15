@@ -40,6 +40,6 @@ private:
 	std::vector<BlockMod> blocksToGenerate;
 	TextureSheet* sheet;
 	BlockPalette* pallete;
-	siv::PerlinNoise perlinNoise;
+	FastNoiseLite perlinNoise;
 	ChunkCoord lastPlayerChunkCoord;
 };

@@ -38,9 +38,8 @@ void World::createWorld()
 
 	srand(time(NULL));
 
-	siv::PerlinNoise::seed_type seed = rand() % RAND_MAX;
-
-	perlinNoise = siv::PerlinNoise(seed);
+	perlinNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+	perlinNoise.SetSeed(rand() % RAND_MAX);
 
 	updateLoadedChunks(lastPlayerChunkCoord);
 }
@@ -70,7 +69,6 @@ void World::update(Player& player, float deltaTime)
 		chunk->updateMesh(*sheet);
 
 		applyBlockMods(true);
-
 
 		if (isFirstTimeLoading && chunksToLoad.empty())
 		{
@@ -163,10 +161,6 @@ void World::applyBlockMods(bool updateChunks = true)
 
 		int chunkX = blockMod.blockX - coord.x * CHUNK_SIZE_X;
 		int chunkZ = blockMod.blockZ - coord.y * CHUNK_SIZE_Z;
-		if (chunkX < 0 || chunkZ < 0)
-		{
-			continue;
-		}
 		chunk->setBlockAtDontUpdate(chunkX, blockMod.blockY, chunkZ, blockMod.blockType);
 
 		if (updateChunks && std::find(chunksToUpdate.begin(), chunksToUpdate.end(), chunk) == chunksToUpdate.end())

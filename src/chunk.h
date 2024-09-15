@@ -2,15 +2,15 @@
 
 #include "texturesheet.h"
 #include "blockpallete.h"
-#include "perlinNoiseLib/PerlinNoise.hpp"
+#include "FastNoiseLite.h"
 
 constexpr int CHUNK_SIZE_X = 16;
 constexpr int CHUNK_SIZE_Y = 256;
 constexpr int CHUNK_SIZE_Z = 16;
 
-constexpr int terrainHeight = 45;
-constexpr double heightNoiseScale = 0.03;
-constexpr double heightNoiseMultiplier = 25;
+constexpr int terrainHeight = 65;
+constexpr float heightNoiseScale = 2.00f;
+constexpr float heightNoiseMultiplier = 25;
 
 struct ChunkCoord
 {
@@ -63,7 +63,7 @@ public:
 	bool modified;
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
-	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, siv::PerlinNoise* noise);
+	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise);
 	~Chunk();
 
 	void generateChunk();
@@ -71,7 +71,7 @@ public:
 	void setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet);
 	void setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType);
 	std::vector<BlockMod> generateTree(int x, int y, int z, int height);
-	static unsigned char getGenerateBlockAt(siv::PerlinNoise& noise, int x, int y, int z); // Returns the block that should be generated at that coordinate
+	static unsigned char getGenerateBlockAt(FastNoiseLite& noise, int x, int y, int z); // Returns the block that should be generated at that coordinate
 
 	void updateMesh(TextureSheet& sheet);
 	void renderChunk();
@@ -80,7 +80,7 @@ private:
 	unsigned int EBO;
 	unsigned int VBO;
 	BlockPalette* worldPallete;
-	siv::PerlinNoise* noise;
+	FastNoiseLite* noise;
 	World* world;
 
 
