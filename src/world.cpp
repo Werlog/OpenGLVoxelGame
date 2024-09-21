@@ -8,6 +8,8 @@
 #include <cmath>
 #include "profiling/codetimer.h"
 #include "player.h"
+#include <random>
+#include <limits>
 
 World::World(BlockPalette* pallete, TextureSheet* sheet, Player& player, int shaderHandle)
 {
@@ -36,10 +38,17 @@ void World::createWorld()
 	CodeTimer createTimer = CodeTimer("World creation");
 	loadedChunks.reserve(RENDER_DISTANCE * RENDER_DISTANCE);
 
-	srand(time(NULL));
+	std::random_device rd;
+	std::mt19937 generator(rd());
+
+	std::uniform_int_distribution<> distr(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+
+	int seed = distr(generator);
+
+	std::cout << "World Seed is: " << seed << std::endl;
 
 	perlinNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-	perlinNoise.SetSeed(rand() % RAND_MAX);
+	perlinNoise.SetSeed(seed);
 
 	updateLoadedChunks(lastPlayerChunkCoord);
 }
