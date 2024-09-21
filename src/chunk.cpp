@@ -13,6 +13,7 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, Fast
 	this->noise = noise;
 	this->world = world;
 	this->modified = false;
+	this->didGenerateTree = false;
 
 
 	std::memset(blocks, 0, sizeof(blocks));
@@ -41,7 +42,6 @@ Chunk::~Chunk()
 
 void Chunk::generateChunk()
 {
-	CodeTimer c = CodeTimer("Chunk Gen");
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE_Y; y++)
@@ -67,6 +67,8 @@ void Chunk::generateChunk()
 				float treeHeight = (1 - tree) * 30.0f;
 				if (treeHeight < 5.0f) treeHeight = 5.0f;
 				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
+
+				didGenerateTree = true;
 			}
 		}
 	}

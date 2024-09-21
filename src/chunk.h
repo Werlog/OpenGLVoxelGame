@@ -61,6 +61,7 @@ class Chunk
 public:
 	ChunkCoord position;
 	bool modified;
+	bool didGenerateTree; // Used to optimize chunk generation by not updating tree chunks twice
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
 	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise);

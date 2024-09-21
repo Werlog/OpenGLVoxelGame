@@ -35,7 +35,6 @@ World::~World()
 
 void World::createWorld()
 {
-	CodeTimer createTimer = CodeTimer("World creation");
 	loadedChunks.reserve(RENDER_DISTANCE * RENDER_DISTANCE);
 
 	std::random_device rd;
@@ -70,12 +69,14 @@ void World::update(Player& player, float deltaTime)
 
 	if (!chunksToLoad.empty() && sinceLoadedChunk > loadChunkDelay)
 	{
+		CodeTimer cTimer = CodeTimer("Chunk creation");
 		Chunk* chunk = chunksToLoad.front();
 		chunksToLoad.pop();
 		if (getChunkByCoordinate(chunk->position) != nullptr) return;
 
 		chunk->generateChunk();
-		chunk->updateMesh(*sheet);
+		if (!chunk->didGenerateTree)
+			chunk->updateMesh(*sheet);
 
 		applyBlockMods(true);
 
