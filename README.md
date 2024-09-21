@@ -23,6 +23,7 @@ Scroll - swap between blocks
 	- Trees
 - Block Placing and Breaking
 - Player Movement and Player collision
+- Diffuse Lighting
 
 ## Planned Features
 
