@@ -89,8 +89,6 @@ bool Game::init()
 	*/
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	return true;
 }
 
@@ -114,6 +112,10 @@ void Game::gameLoop()
 	
 	unsigned int viewLoc = glGetUniformLocation(shader.getProgramHandle(), "view");
 	unsigned int projectionLoc = glGetUniformLocation(shader.getProgramHandle(), "projection");
+	unsigned int lightDirLoc = glGetUniformLocation(shader.getProgramHandle(), "lightDirection");
+
+	glm::vec3 lightDirection = glm::normalize(glm::vec3(0.5f, 1.0f, 1.0f));
+	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirection));
 
 	glClearColor(0.25f, 0.8f, 1.0f, 1.0f);
 

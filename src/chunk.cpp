@@ -198,7 +198,7 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 						int posY = voxelVerts[i + 1] + y;
 						int posZ = voxelVerts[i + 2] + z + 1;
 
-						vertexData.push_back(ChunkVertex{ posX | posY << 5 | posZ << 14, uvs[uvCounter], uvs[uvCounter + 1]});
+						vertexData.push_back(ChunkVertex{ posX | posY << 5 | posZ << 14 | faceIndex << 19, uvs[uvCounter], uvs[uvCounter + 1]});
 
 						uvCounter += 2;
 					}
