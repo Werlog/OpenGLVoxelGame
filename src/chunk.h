@@ -3,6 +3,7 @@
 #include "texturesheet.h"
 #include "blockpallete.h"
 #include "FastNoiseLite.h"
+#include <atomic>
 
 constexpr int CHUNK_SIZE_X = 16;
 constexpr int CHUNK_SIZE_Y = 256;
@@ -60,8 +61,8 @@ class Chunk
 {
 public:
 	ChunkCoord position;
+	std::atomic<bool> generated;
 	bool modified;
-	bool didGenerateTree; // Used to optimize chunk generation by not updating tree chunks twice
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
 	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise);
@@ -87,6 +88,7 @@ private:
 
 	int indicesCount;
 
+	void doGenerateChunk();
 	void createMesh(std::vector<ChunkVertex>& vertexData, std::vector<int>& indices);
 	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
 };

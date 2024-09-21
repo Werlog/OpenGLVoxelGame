@@ -33,6 +33,7 @@ private:
 
 	float sinceLoadedChunk;
 	bool isFirstTimeLoading;
+	bool isGenerating;
 
 	int shaderProgram;
 	int shaderModelLoc;

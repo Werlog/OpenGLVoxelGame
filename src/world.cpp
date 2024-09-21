@@ -16,6 +16,7 @@ World::World(BlockPalette* pallete, TextureSheet* sheet, Player& player, int sha
 	this->pallete = pallete;
 	this->sheet = sheet;
 	this->shaderProgram = shaderHandle;
+	this->isGenerating = false;
 
 	lastPlayerChunkCoord = ChunkCoord::toChunkCoord(player.position);
 	sinceLoadedChunk = 0.0f;
@@ -69,24 +70,36 @@ void World::update(Player& player, float deltaTime)
 
 	if (!chunksToLoad.empty() && sinceLoadedChunk > loadChunkDelay)
 	{
-		CodeTimer cTimer = CodeTimer("Chunk creation");
 		Chunk* chunk = chunksToLoad.front();
-		chunksToLoad.pop();
-		if (getChunkByCoordinate(chunk->position) != nullptr) return;
-
-		chunk->generateChunk();
-		if (!chunk->didGenerateTree)
+		if (getChunkByCoordinate(chunk->position) != nullptr)
+		{
+			chunksToLoad.pop();
+			isGenerating = false;
+			return;
+		}
+		if (!isGenerating)
+		{
+			chunk->generateChunk();
+			isGenerating = true;
+			return;
+		}
+		if (chunk->generated.load())
+		{
+			chunksToLoad.pop();
 			chunk->updateMesh(*sheet);
 
-		applyBlockMods(true);
+			applyBlockMods(true);
 
-		if (isFirstTimeLoading && chunksToLoad.empty())
-		{
-			isFirstTimeLoading = false;
+			if (isFirstTimeLoading && chunksToLoad.empty())
+			{
+				isFirstTimeLoading = false;
+			}
+
+			loadedChunks.push_back(chunk);
+			sinceLoadedChunk = 0.0f;
+			isGenerating = false;
 		}
 
-		loadedChunks.push_back(chunk);
-		sinceLoadedChunk = 0.0f;
 	}
 	else
 	{
