@@ -29,8 +29,9 @@ void main()
 
 	vec3 normal = voxelNormals[faceIndex];
 	
-	lightIntensity = max(dot(normal, lightDirection), 0.2f);
-	lightIntensity += 0.5f; // Ambient
+	lightIntensity = max(dot(normal, lightDirection), 0.0f);
+	lightIntensity += 0.7f; // Ambient
+	lightIntensity = min(lightIntensity, 1.07f);
 	
 
 	gl_Position = projection * view * model * vec4(positionX, positionY, positionZ, 1);

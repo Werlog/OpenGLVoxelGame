@@ -44,11 +44,9 @@ void World::createWorld()
 	std::uniform_int_distribution<> distr(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
 
 	int seed = distr(generator);
+	splinedGenerator.setSeed(seed);
 
 	std::cout << "World Seed is: " << seed << std::endl;
-
-	perlinNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-	perlinNoise.SetSeed(seed);
 
 	updateLoadedChunks(lastPlayerChunkCoord);
 }
@@ -117,7 +115,7 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 			Chunk* unloaded = getUnloadedChunkByCoordinate(coord);
 			if (getChunkByCoordinate(coord) == nullptr && unloaded == nullptr)
 			{
-				Chunk* chunk = new Chunk(pallete, this, coord, &perlinNoise);
+				Chunk* chunk = new Chunk(pallete, this, coord, &splinedGenerator);
 				chunksToLoad.push(chunk);
 			}
 			else if (unloaded != nullptr)
@@ -281,7 +279,7 @@ unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = 
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr)
 	{
-		if (includeNotGenerated) return Chunk::getGenerateBlockAt(perlinNoise, x, y, z);
+		if (includeNotGenerated) return Chunk::getGenerateBlockAt(splinedGenerator, x, y, z);
 		return 0;
 	}
 	return chunk->getBlockAt(x - coord.x * CHUNK_SIZE_X, y, z - coord.y * CHUNK_SIZE_Z);

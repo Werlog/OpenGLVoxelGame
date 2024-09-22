@@ -2,7 +2,7 @@
 
 #include "texturesheet.h"
 #include "blockpallete.h"
-#include "FastNoiseLite.h"
+#include "splinedgenerator.h"
 #include <atomic>
 
 constexpr int CHUNK_SIZE_X = 16;
@@ -65,7 +65,7 @@ public:
 	bool modified;
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
-	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise);
+	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, SplinedGenerator* generator);
 	~Chunk();
 
 	void generateChunk();
@@ -73,7 +73,7 @@ public:
 	void setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet);
 	void setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType);
 	std::vector<BlockMod> generateTree(int x, int y, int z, int height);
-	static unsigned char getGenerateBlockAt(FastNoiseLite& noise, int x, int y, int z); // Returns the block that should be generated at that coordinate
+	static unsigned char getGenerateBlockAt(SplinedGenerator& generator, int x, int y, int z); // Returns the block that should be generated at that coordinate
 
 	void updateMesh(TextureSheet& sheet);
 	void renderChunk();
@@ -82,7 +82,7 @@ private:
 	unsigned int EBO;
 	unsigned int VBO;
 	BlockPalette* worldPallete;
-	FastNoiseLite* noise;
+	SplinedGenerator* generator;
 	World* world;
 
 

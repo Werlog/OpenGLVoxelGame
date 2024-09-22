@@ -7,11 +7,11 @@
 #include <thread>
 #include "profiling/codetimer.h"
 
-Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, FastNoiseLite* noise)
+Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, SplinedGenerator* generator)
 {
 	this->worldPallete = worldPallete;
 	this->position = position;
-	this->noise = noise;
+	this->generator = generator;
 	this->world = world;
 	this->modified = false;
 	this->generated.store(false);
@@ -49,20 +49,20 @@ void Chunk::doGenerateChunk()
 		{
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
-				blocks[x][y][z] = getGenerateBlockAt(*noise, (position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
+				blocks[x][y][z] = getGenerateBlockAt(*generator, (position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
 			}
 		}
 	}
 
-	
+	/*
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
 		{
-			float tree = noise->GetNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.y * CHUNK_SIZE_Z + z) * 30.0f);
+			float tree = generator->getBasicNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.y * CHUNK_SIZE_Z + z) * 30.0f);
 			if (tree > 0.74f)
 			{
-				float heightMod = noise->GetNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
+				float heightMod = generator->get2DSplinedNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
 				float treeHeight = (1 - tree) * 35.0f;
@@ -71,6 +71,7 @@ void Chunk::doGenerateChunk()
 			}
 		}
 	}
+	*/
 
 	generated.store(true);
 }
@@ -142,14 +143,14 @@ std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int heig
 	return tree;
 }
 
-unsigned char Chunk::getGenerateBlockAt(FastNoiseLite& noise, int x, int y, int z)
+unsigned char Chunk::getGenerateBlockAt(SplinedGenerator& noise, int x, int y, int z)
 {
-	float heightMod = noise.GetNoise(x * heightNoiseScale, z * heightNoiseScale) * heightNoiseMultiplier;
+	float heightMod = noise.get2DSplinedNoise(x * heightNoiseScale, z * heightNoiseScale) * heightNoiseMultiplier;
 	int height = terrainHeight + heightMod;
 
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);
 	if (caveMultiplier < 0.75f) caveMultiplier = 0.75f;
-	float cavesMod = noise.GetNoise(x * 3.0f, y * 7.0f, z * 3.0f) * 1.0f;
+	float cavesMod = noise.get3DNoise(x * 3.0f, y * 7.0f, z * 3.0f) * 1.0f;
 	if (cavesMod > 0.4f && y > 2)
 	{
 		return 0;

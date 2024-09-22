@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include <queue>
+#include "splinedgenerator.h"
 
 constexpr int RENDER_DISTANCE = 7;
 constexpr float loadChunkDelay = 0.0f;
@@ -31,6 +32,8 @@ private:
 	std::vector<Chunk*> unloadedChunks;
 	std::queue<Chunk*> chunksToLoad;
 
+	SplinedGenerator splinedGenerator;
+
 	float sinceLoadedChunk;
 	bool isFirstTimeLoading;
 	bool isGenerating;
@@ -41,6 +44,5 @@ private:
 	std::vector<BlockMod> blocksToGenerate;
 	TextureSheet* sheet;
 	BlockPalette* pallete;
-	FastNoiseLite perlinNoise;
 	ChunkCoord lastPlayerChunkCoord;
 };
