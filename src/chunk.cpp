@@ -57,17 +57,17 @@ void Chunk::doGenerateChunk()
 	}
 
 	
-	for (int x = 0; x < CHUNK_SIZE_X; x++)
+	for (int x = 0; x < CHUNK_SIZE_X; x += 2)
 	{
-		for (int z = 0; z < CHUNK_SIZE_Z; z++)
+		for (int z = 0; z < CHUNK_SIZE_Z; z += 2)
 		{
 			float tree = generator->getBasicNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.y * CHUNK_SIZE_Z + z) * 30.0f);
-			if (tree > 0.74f)
+			if (tree > 0.68f)
 			{
 				float heightMod = generator->get2DSplinedNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
 				if (blocks[x][height][z] == 0) continue;
-				float treeHeight = (1 - tree) * 35.0f;
+				float treeHeight = (1 - tree) * 30.0f;
 				if (treeHeight < 5.0f) treeHeight = 5.0f;
 				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
 			}

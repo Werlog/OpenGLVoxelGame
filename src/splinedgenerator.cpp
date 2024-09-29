@@ -2,7 +2,7 @@
 
 SplinedGenerator::SplinedGenerator()
 {
-	basicNoise.setScale(2.0f);
+	basicNoise.setScale(1.5f);
 	mountainNoise.setScale(0.2f);
 
 	basicNoise.addSpline(-1.0f, -0.5f);
@@ -24,7 +24,7 @@ float SplinedGenerator::get2DSplinedNoise(float x, float y)
 	float basic = basicNoise.get2DSplinedNoise(x, y);
 	float mountain = mountainNoise.get2DSplinedNoise(x, y);
 
-	return (mountain * 9.0f + basic) / 2.0f;
+	return (mountain * 9.0f + basic * 1.5f) / 2.0f;
 }
 
 float SplinedGenerator::get3DNoise(float x, float y, float z)
