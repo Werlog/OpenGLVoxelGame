@@ -27,7 +27,6 @@ Scroll - swap between blocks
 
 ## Planned Features
 
-- Improved performance when generating chunks
 - Improved terrain generation (using splines)
 - HUD (showing current picked block and a crosshair)
 
