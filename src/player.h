@@ -5,7 +5,7 @@
 #include "imgui.h"
 
 constexpr float playerGravity = -19.62f;
-constexpr float playerSpeed = 6.0f;
+constexpr float playerSpeed = 7.0f;
 constexpr float playerWidth = 0.6f;
 constexpr float playerHeight = 1.9f;
 constexpr float playerJumpDelay = 0.2f;

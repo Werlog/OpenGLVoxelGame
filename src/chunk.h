@@ -62,6 +62,8 @@ class Chunk
 public:
 	ChunkCoord position;
 	std::atomic<bool> generated;
+	std::atomic<bool> readyToUpdate;
+	std::atomic<bool> isUpdating;
 	bool modified;
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
@@ -70,13 +72,14 @@ public:
 
 	void generateChunk();
 	unsigned char getBlockAt(int x, int y, int z);
-	void setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet);
+	void setBlockAt(int x, int y, int z, unsigned char blockType);
 	void setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType);
 	std::vector<BlockMod> generateTree(int x, int y, int z, int height);
 	static unsigned char getGenerateBlockAt(SplinedGenerator& generator, int x, int y, int z); // Returns the block that should be generated at that coordinate
-
 	void updateMesh(TextureSheet& sheet);
+
 	void renderChunk();
+	void createMesh();
 private:
 	unsigned int VAO;
 	unsigned int EBO;
@@ -84,11 +87,12 @@ private:
 	BlockPalette* worldPallete;
 	SplinedGenerator* generator;
 	World* world;
-
+	std::vector<ChunkVertex> vertexData;
+	std::vector<int> indices;
 
 	int indicesCount;
 
+	void doUpdateMesh(TextureSheet& sheet);
 	void doGenerateChunk();
-	void createMesh(std::vector<ChunkVertex>& vertexData, std::vector<int>& indices);
 	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
 };

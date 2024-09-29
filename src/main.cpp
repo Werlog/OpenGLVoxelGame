@@ -30,6 +30,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 int main(void)
 {
+	std::cout << "Shit is very unstable right now, ngl" << std::endl;
+	std::cout << "It might work, or it might just explode, idfk at this point." << std::endl;
 	if (!game.init())
 	{
 		std::cout << "Unable to launch the game." << std::endl;

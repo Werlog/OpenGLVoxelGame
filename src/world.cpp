@@ -17,6 +17,7 @@ World::World(BlockPalette* pallete, TextureSheet* sheet, Player& player, int sha
 	this->sheet = sheet;
 	this->shaderProgram = shaderHandle;
 	this->isGenerating = false;
+	this->isUpdatingChunk = false;
 
 	lastPlayerChunkCoord = ChunkCoord::toChunkCoord(player.position);
 	sinceLoadedChunk = 0.0f;
@@ -66,12 +67,28 @@ void World::update(Player& player, float deltaTime)
 		lastPlayerChunkCoord = playerCoord;
 	}
 
+	if (!chunksToUpdate.empty())
+	{
+		Chunk* chunk = chunksToUpdate.front();
+		if (isUpdatingChunk && chunk->readyToUpdate.load())
+		{
+			chunk->createMesh();
+			chunksToUpdate.pop_front();
+			isUpdatingChunk = false;
+		}
+		else if (!isUpdatingChunk)
+		{
+			chunk->updateMesh(*sheet);
+			isUpdatingChunk = true;
+		}
+	}
+
 	if (!chunksToLoad.empty() && sinceLoadedChunk > loadChunkDelay)
 	{
 		Chunk* chunk = chunksToLoad.front();
 		if (getChunkByCoordinate(chunk->position) != nullptr)
 		{
-			chunksToLoad.pop();
+			chunksToLoad.pop_front();
 			isGenerating = false;
 			return;
 		}
@@ -83,8 +100,9 @@ void World::update(Player& player, float deltaTime)
 		}
 		if (chunk->generated.load())
 		{
-			chunksToLoad.pop();
-			chunk->updateMesh(*sheet);
+			std::lock_guard lock(chunksMutex);
+			chunksToLoad.pop_front();
+			chunksToUpdate.push_back(chunk);
 
 			applyBlockMods(true);
 
@@ -107,6 +125,7 @@ void World::update(Player& player, float deltaTime)
 
 void World::updateLoadedChunks(ChunkCoord& playerCoord)
 {
+	std::lock_guard lock(chunksMutex);
 	for (int x = -RENDER_DISTANCE; x < RENDER_DISTANCE; x++)
 	{
 		for (int z = -RENDER_DISTANCE; z < RENDER_DISTANCE; z++) 
@@ -116,7 +135,7 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 			if (getChunkByCoordinate(coord) == nullptr && unloaded == nullptr)
 			{
 				Chunk* chunk = new Chunk(pallete, this, coord, &splinedGenerator);
-				chunksToLoad.push(chunk);
+				chunksToLoad.push_back(chunk);
 			}
 			else if (unloaded != nullptr)
 			{
@@ -132,6 +151,32 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 		if (abs(chunk->position.x - playerCoord.x) > RENDER_DISTANCE
 			|| abs(chunk->position.y - playerCoord.y) > RENDER_DISTANCE)
 		{
+			if (std::find(chunksToUnload.begin(), chunksToUnload.end(), chunk) != chunksToUnload.end()) continue;
+
+			chunksToUnload.push_back(chunk);
+		}
+	}
+
+	unloadChunks();
+}
+
+void World::unloadChunks()
+{
+	std::lock_guard lock(chunksMutex);
+
+	for (int i = 0; i < chunksToUnload.size(); i++)
+	{
+ 		Chunk* chunk = chunksToUnload[i];
+		if (!chunk->isUpdating.load() && chunk->generated.load())
+		{
+			if (!chunksToLoad.empty() && chunk == chunksToLoad.front()) continue;
+			if (!chunksToUpdate.empty() && chunk == chunksToUpdate.front()) continue;
+
+			loadedChunks.erase(std::remove(loadedChunks.begin(), loadedChunks.end(), chunk), loadedChunks.end());
+			chunksToLoad.erase(std::remove(chunksToLoad.begin(), chunksToLoad.end(), chunk), chunksToLoad.end());
+			chunksToUpdate.erase(std::remove(chunksToUpdate.begin(), chunksToUpdate.end(), chunk), chunksToUpdate.end());
+
+			chunksToUnload.erase(chunksToUnload.begin() + i);
 			if (chunk->modified)
 			{
 				unloadedChunks.push_back(chunk);
@@ -140,14 +185,16 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 			{
 				delete chunk;
 			}
-			loadedChunks.erase(loadedChunks.begin() + i);
 			i--;
 		}
 	}
+
+	std::cout << chunksToUnload.size() << std::endl;
 }
 
 void World::renderWorld(Player& player)
 {
+	std::lock_guard lock(chunksMutex);
 	for (size_t i = 0; i < loadedChunks.size(); i++)
 	{
 		Chunk* chunk = loadedChunks[i];
@@ -196,7 +243,7 @@ void World::applyBlockMods(bool updateChunks = true)
 	{
 		for (Chunk* chunk : chunksToUpdate)
 		{
-			chunk->updateMesh(*sheet);
+			this->chunksToUpdate.push_back(chunk);
 		}
 	}
 }
@@ -210,13 +257,13 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 	chunk->modified = true;
 	int chunkX = x - coord.x * CHUNK_SIZE_X;
 	int chunkZ = z - coord.y * CHUNK_SIZE_Z;
-	chunk->setBlockAt(chunkX, y, chunkZ, newBlockType, *sheet);
+	chunk->setBlockAt(chunkX, y, chunkZ, newBlockType);
 	if (chunkX + 1 >= CHUNK_SIZE_X)
 	{
 		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{coord.x + 1, coord.y});
 		if (xChunk != nullptr)
 		{
-			xChunk->updateMesh(*sheet);
+			chunksToUpdate.push_back(xChunk);
 		}
 	}
 	else if (chunkX - 1 <= 0)
@@ -224,7 +271,7 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{ coord.x - 1, coord.y });
 		if (xChunk != nullptr)
 		{
-			xChunk->updateMesh(*sheet);
+			chunksToUpdate.push_back(xChunk);
 		}
 	}
 	if (chunkZ + 1 >= CHUNK_SIZE_Z)
@@ -232,7 +279,7 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{coord.x, coord.y + 1});
 		if (zChunk != nullptr)
 		{
-			zChunk->updateMesh(*sheet);
+			chunksToUpdate.push_back(zChunk);
 		}
 	}
 	else if (chunkZ - 1 <= 0)
@@ -240,16 +287,18 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{ coord.x, coord.y - 1 });
 		if (zChunk != nullptr)
 		{
-			zChunk->updateMesh(*sheet);
+			chunksToUpdate.push_back(zChunk);
 		}
 	}
+
+	chunksToUpdate.push_back(chunk);
 }
 
 Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 {
 	for (size_t i = 0; i < loadedChunks.size(); i++)
 	{
-		if (loadedChunks[i]->position == coord)
+		if (coord == loadedChunks[i]->position)
 		{
 			return loadedChunks[i];
 		}

@@ -15,6 +15,7 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, Spli
 	this->world = world;
 	this->modified = false;
 	this->generated.store(false);
+	this->readyToUpdate.store(true);
 
 
 	std::memset(blocks, 0, sizeof(blocks));
@@ -43,6 +44,7 @@ Chunk::~Chunk()
 
 void Chunk::doGenerateChunk()
 {
+	CodeTimer genTimer = CodeTimer("Chunk Generation");
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE_Y; y++)
@@ -54,7 +56,7 @@ void Chunk::doGenerateChunk()
 		}
 	}
 
-	/*
+	
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
@@ -71,16 +73,15 @@ void Chunk::doGenerateChunk()
 			}
 		}
 	}
-	*/
-
+	
 	generated.store(true);
 }
 
 void Chunk::generateChunk()
 {
-	std::thread killmePls = std::thread(&Chunk::doGenerateChunk, this);
+	std::thread generateThread = std::thread(&Chunk::doGenerateChunk, this);
 
-	killmePls.detach();
+	generateThread.detach();
 }
 
 unsigned char Chunk::getBlockAt(int x, int y, int z)
@@ -92,10 +93,9 @@ unsigned char Chunk::getBlockAt(int x, int y, int z)
 	return blocks[x][y][z];
 }
 
-void Chunk::setBlockAt(int x, int y, int z, unsigned char blockType, TextureSheet& updateSheet)
+void Chunk::setBlockAt(int x, int y, int z, unsigned char blockType)
 {
 	blocks[x][y][z] = blockType;
-	updateMesh(updateSheet);
 }
 
 void Chunk::setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType)
@@ -180,10 +180,18 @@ unsigned char Chunk::getGenerateBlockAt(SplinedGenerator& noise, int x, int y, i
 	}
 }
 
-void Chunk::updateMesh(TextureSheet& textureSheet)
+void Chunk::updateMesh(TextureSheet& sheet)
 {
-	std::vector<ChunkVertex> vertexData;
-	std::vector<int> indices;
+	readyToUpdate.store(false);
+	std::thread updateThread = std::thread(&Chunk::doUpdateMesh, this, sheet);
+	updateThread.detach();
+}
+
+void Chunk::doUpdateMesh(TextureSheet& textureSheet)
+{
+	isUpdating.store(true);
+	vertexData.clear();
+	indices.clear();
 	int curIndex = 0;
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
@@ -192,23 +200,29 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
 				BlockType currentBlock = worldPallete->get(blocks[x][y][z]);
-				if (currentBlock.id == 0) continue; // Air
-
+				if (currentBlock.id == 0) {
+					continue;
+				}
 				int madeFaces = 0;
 				int discardedFaces = 0;
+
 				for (int faceIndex = 0; faceIndex < 6; faceIndex++)
 				{
+					std::lock_guard lock(world->chunksMutex);
+
 					int checkIndex = faceIndex * 3;
 					int checkX = faceChecks[checkIndex] + x;
 					int checkY = faceChecks[checkIndex + 1] + y;
 					int checkZ = faceChecks[checkIndex + 2] + z;
-					
-					if (worldPallete->get(getBlockAt(checkX, checkY, checkZ)).isSolid)
+
+					unsigned char block = getBlockAt(checkX, checkY, checkZ);
+					BlockType check = worldPallete->get(block);
+					if (check.isSolid)
 					{
 						discardedFaces++;
 						continue;
 					}
-
+					
 					std::vector<float> uvs = textureSheet.getUVs(getTextureNumberFromFaceIndex(currentBlock, faceIndex));
 
 					int uvCounter = 0;
@@ -230,20 +244,19 @@ void Chunk::updateMesh(TextureSheet& textureSheet)
 
 					madeFaces++;
 				}
-
 				curIndex += madeFaces * 4;
 			}
 		}
 	}
-
 	indicesCount = indices.size();
-	int bytesUsed = vertexData.size() * sizeof(float) + indicesCount * sizeof(int);
 
-	createMesh(vertexData, indices);
+	readyToUpdate.store(true);
+	isUpdating.store(false);
 }
 
-void Chunk::createMesh(std::vector<ChunkVertex>& vertexData, std::vector<int>& indices)
+void Chunk::createMesh()
 {
+	if (!readyToUpdate.load()) return;
 	if (VAO == 0)
 	{
 		glGenVertexArrays(1, &VAO);
