@@ -27,7 +27,8 @@ Scroll - swap between blocks
 
 ## Planned Features
 
-- Improved terrain generation (using splines)
+- Billboard blocks (Tall grass)
+- Semi-transparent blocks (Water)
 - HUD (showing current picked block and a crosshair)
 
 ## How to build
