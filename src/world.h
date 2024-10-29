@@ -5,7 +5,7 @@
 #include "splinedgenerator.h"
 #include <mutex>
 
-constexpr int RENDER_DISTANCE = 8;
+constexpr int RENDER_DISTANCE = 10;
 constexpr float loadChunkDelay = 0.0f;
 
 class Player;

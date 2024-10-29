@@ -31,7 +31,7 @@ void main()
 	
 	lightIntensity = max(dot(normal, lightDirection), 0.0f);
 	lightIntensity += 0.7f; // Ambient
-	lightIntensity = min(lightIntensity, 1.07f);
+	lightIntensity = min(lightIntensity, 1.04f);
 	
 
 	gl_Position = projection * view * model * vec4(positionX, positionY, positionZ, 1);

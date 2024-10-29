@@ -121,7 +121,7 @@ void Game::gameLoop()
 
 	glBindTexture(GL_TEXTURE_2D, texture.getTextureHandle());
 
-	while (!glfwWindowShouldClose(window)) 
+	while (!glfwWindowShouldClose(window))
 	{
 		processInput();
 		timer.tick();

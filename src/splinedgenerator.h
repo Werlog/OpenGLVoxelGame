@@ -16,4 +16,5 @@ public:
 private:
 	SplinedNoise basicNoise;
 	SplinedNoise mountainNoise;
+	SplinedNoise valleyNoise;
 };

@@ -42,9 +42,9 @@ void World::createWorld()
 	std::random_device rd;
 	std::mt19937 generator(rd());
 
-	std::uniform_int_distribution<> distr(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+	std::uniform_int_distribution<int32_t> distr(std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
 
-	int seed = distr(generator);
+	int32_t seed = distr(generator);
 	splinedGenerator.setSeed(seed);
 
 	std::cout << "World Seed is: " << seed << std::endl;
@@ -56,7 +56,7 @@ void World::update(Player& player, float deltaTime)
 {
 	if (isFirstTimeLoading)
 	{
-		player.position.y = 80.0f;
+		player.position.y = 95.0f;
 		player.velocity.y = 0.0f;
 	}
 	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
