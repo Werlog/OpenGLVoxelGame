@@ -10,4 +10,6 @@ uniform sampler2D ourTexture;
 void main()
 {
 	aColor = texture(ourTexture, ourTexCoord) * lightIntensity;
+	if (aColor.a < 0.2f)
+		discard;
 }

@@ -12,4 +12,5 @@ struct BlockType
 	int bottomFaceTexture;
 	
 	bool isSolid;
+	bool isTransparent;
 };

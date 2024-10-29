@@ -217,7 +217,7 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 
 					unsigned char block = getBlockAt(checkX, checkY, checkZ);
 					BlockType check = worldPallete->get(block);
-					if (check.isSolid)
+					if (!check.isTransparent)
 					{
 						discardedFaces++;
 						continue;
