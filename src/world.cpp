@@ -56,7 +56,7 @@ void World::update(Player& player, float deltaTime)
 {
 	if (isFirstTimeLoading)
 	{
-		player.position.y = 30.0f;
+		player.position.y = 80.0f;
 		player.velocity.y = 0.0f;
 	}
 	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
@@ -128,19 +128,22 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 	std::lock_guard lock(chunksMutex);
 	for (int x = -RENDER_DISTANCE; x < RENDER_DISTANCE; x++)
 	{
-		for (int z = -RENDER_DISTANCE; z < RENDER_DISTANCE; z++) 
+		for (int y = -VERTICAL_DISTANCE; y < VERTICAL_DISTANCE; y++)
 		{
-			ChunkCoord coord = ChunkCoord{ playerCoord.x + x, playerCoord.y + z };
-			Chunk* unloaded = getUnloadedChunkByCoordinate(coord);
-			if (getChunkByCoordinate(coord) == nullptr && unloaded == nullptr)
+			for (int z = -RENDER_DISTANCE; z < RENDER_DISTANCE; z++) 
 			{
-				Chunk* chunk = new Chunk(pallete, this, coord, &splinedGenerator);
-				chunksToLoad.push_back(chunk);
-			}
-			else if (unloaded != nullptr)
-			{
-				unloadedChunks.erase(std::remove(unloadedChunks.begin(), unloadedChunks.end(), unloaded), unloadedChunks.end());
-				loadedChunks.push_back(unloaded);
+				ChunkCoord coord = ChunkCoord{ playerCoord.x + x, playerCoord.y + y, playerCoord.z + z };
+				Chunk* unloaded = getUnloadedChunkByCoordinate(coord);
+				if (getChunkByCoordinate(coord) == nullptr && unloaded == nullptr)
+				{
+					Chunk* chunk = new Chunk(pallete, this, coord, &splinedGenerator);
+					chunksToLoad.push_back(chunk);
+				}
+				else if (unloaded != nullptr)
+				{
+					unloadedChunks.erase(std::remove(unloadedChunks.begin(), unloadedChunks.end(), unloaded), unloadedChunks.end());
+					loadedChunks.push_back(unloaded);
+				}
 			}
 		}
 	}
@@ -149,7 +152,8 @@ void World::updateLoadedChunks(ChunkCoord& playerCoord)
 	{
 		Chunk* chunk = loadedChunks[i];
 		if (abs(chunk->position.x - playerCoord.x) > RENDER_DISTANCE
-			|| abs(chunk->position.y - playerCoord.y) > RENDER_DISTANCE)
+			|| abs(chunk->position.z - playerCoord.z) > RENDER_DISTANCE
+			|| abs(chunk->position.y - playerCoord.y) > VERTICAL_DISTANCE)
 		{
 			if (std::find(chunksToUnload.begin(), chunksToUnload.end(), chunk) != chunksToUnload.end()) continue;
 
@@ -201,7 +205,7 @@ void World::renderWorld(Player& player)
 		ChunkCoord coord = chunk->position;
 
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(coord.x * CHUNK_SIZE_X, 0, coord.y * CHUNK_SIZE_Z));
+		model = glm::translate(model, glm::vec3(coord.x * CHUNK_SIZE_X, coord.y * CHUNK_SIZE_Y, coord.z * CHUNK_SIZE_Z));
 		glUniformMatrix4fv(shaderModelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		chunk->renderChunk();
@@ -223,7 +227,7 @@ void World::applyBlockMods(bool updateChunks = true)
 	for (int i = 0; i < blocksToGenerate.size(); i++)
 	{
 		BlockMod& blockMod = blocksToGenerate[i];
-		ChunkCoord coord = ChunkCoord::toChunkCoord(blockMod.blockX, blockMod.blockZ);
+		ChunkCoord coord = ChunkCoord::toChunkCoord(blockMod.blockX, blockMod.blockY, blockMod.blockZ); // CHANGE
 		Chunk* chunk = getChunkByCoordinate(coord);
 		if (chunk == nullptr) continue;
 
@@ -250,17 +254,18 @@ void World::applyBlockMods(bool updateChunks = true)
 
 void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 {
-	ChunkCoord coord = ChunkCoord::toChunkCoord(x, z);
+	ChunkCoord coord = ChunkCoord::toChunkCoord(x, y, z); // CHANGE
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr) return;
 
 	chunk->modified = true;
 	int chunkX = x - coord.x * CHUNK_SIZE_X;
-	int chunkZ = z - coord.y * CHUNK_SIZE_Z;
-	chunk->setBlockAt(chunkX, y, chunkZ, newBlockType);
+	int chunkY = y - coord.y * CHUNK_SIZE_Y;
+	int chunkZ = z - coord.z * CHUNK_SIZE_Z;
+	chunk->setBlockAt(chunkX, chunkY, chunkZ, newBlockType);
 	if (chunkX + 1 >= CHUNK_SIZE_X)
 	{
-		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{coord.x + 1, coord.y});
+		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{coord.x + 1, coord.z});
 		if (xChunk != nullptr)
 		{
 			chunksToUpdate.push_back(xChunk);
@@ -268,7 +273,7 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 	}
 	else if (chunkX - 1 <= 0)
 	{
-		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{ coord.x - 1, coord.y });
+		Chunk* xChunk = getChunkByCoordinate(ChunkCoord{ coord.x - 1, coord.z });
 		if (xChunk != nullptr)
 		{
 			chunksToUpdate.push_back(xChunk);
@@ -276,7 +281,7 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 	}
 	if (chunkZ + 1 >= CHUNK_SIZE_Z)
 	{
-		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{coord.x, coord.y + 1});
+		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{coord.x, coord.z + 1});
 		if (zChunk != nullptr)
 		{
 			chunksToUpdate.push_back(zChunk);
@@ -284,7 +289,7 @@ void World::modifyBlockAt(int x, int y, int z, unsigned char newBlockType)
 	}
 	else if (chunkZ - 1 <= 0)
 	{
-		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{ coord.x, coord.y - 1 });
+		Chunk* zChunk = getChunkByCoordinate(ChunkCoord{ coord.x, coord.z - 1 });
 		if (zChunk != nullptr)
 		{
 			chunksToUpdate.push_back(zChunk);
@@ -322,8 +327,6 @@ Chunk* World::getUnloadedChunkByCoordinate(ChunkCoord coord)
 
 unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = false)
 {
-	if (y < 0 || y > CHUNK_SIZE_Y - 1) return 0;
-
 	ChunkCoord coord = ChunkCoord::toChunkCoord(glm::vec3(x, y, z));
 	Chunk* chunk = getChunkByCoordinate(coord);
 	if (chunk == nullptr)
@@ -331,7 +334,7 @@ unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = 
 		if (includeNotGenerated) return Chunk::getGenerateBlockAt(splinedGenerator, x, y, z);
 		return 0;
 	}
-	return chunk->getBlockAt(x - coord.x * CHUNK_SIZE_X, y, z - coord.y * CHUNK_SIZE_Z);
+	return chunk->getBlockAt(x - coord.x * CHUNK_SIZE_X, y - coord.y * CHUNK_SIZE_Y, z - coord.z * CHUNK_SIZE_Z);
 }
 
 unsigned char World::getBlockAt(float x, float y, float z)

@@ -58,12 +58,6 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 
 	movementDirection += velocity;
 
-	if (position.y < 0)
-	{
-		position.y = 100;
-		velocity.y = 0.5f;
-	}
-
 	position += movementDirection * deltaTime;
 	resolveCollisions(world);
 

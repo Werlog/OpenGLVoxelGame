@@ -15,31 +15,33 @@ constexpr float heightNoiseMultiplier = 25;
 
 struct ChunkCoord
 {
-	int x, y;
+	int x, y, z;
 
 	bool operator==(ChunkCoord other)
 	{
-		return this->x == other.x && this->y == other.y;
+		return this->x == other.x && this->y == other.y && this->z == other.z;
 	}
 
 	bool operator!=(ChunkCoord other)
 	{
-		return this->x != other.x || this->y != other.y;
+		return this->x != other.x || this->y != other.y || this->z != other.z;
 	}
 
 	static ChunkCoord toChunkCoord(const glm::vec3& aPos)
 	{
 		int x = (int)floor(aPos.x / CHUNK_SIZE_X);
-		int y = (int)floor(aPos.z / CHUNK_SIZE_Z);
+		int y = (int)floor(aPos.y / CHUNK_SIZE_Y);
+		int z = (int)floor(aPos.z / CHUNK_SIZE_Z);
 
-		return ChunkCoord{ x, y };
+		return ChunkCoord{ x, y, z };
 	}
-	static ChunkCoord toChunkCoord(int xPos, int zPos)
+	static ChunkCoord toChunkCoord(int xPos, int yPos, int zPos)
 	{
 		int x = (int)floor(xPos / (float)CHUNK_SIZE_X);
-		int y = (int)floor(zPos / (float)CHUNK_SIZE_Z);
+		int y = (int)floor(yPos / (float)CHUNK_SIZE_Y);
+		int z = (int)floor(zPos / (float)CHUNK_SIZE_Z);
 
-		return ChunkCoord{ x, y };
+		return ChunkCoord{ x, y, z };
 	}
 };
 

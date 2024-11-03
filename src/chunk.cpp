@@ -51,7 +51,7 @@ void Chunk::doGenerateChunk()
 		{
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
-				blocks[x][y][z] = getGenerateBlockAt(*generator, (position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z);
+				blocks[x][y][z] = getGenerateBlockAt(*generator, (position.x * CHUNK_SIZE_X) + x, (position.y * CHUNK_SIZE_Y) + y, (position.z * CHUNK_SIZE_Z) + z);
 			}
 		}
 	}
@@ -89,7 +89,7 @@ unsigned char Chunk::getBlockAt(int x, int y, int z)
 {
 	if (x > CHUNK_SIZE_X - 1 || x < 0 || y > CHUNK_SIZE_Y - 1 || y < 0 || z > CHUNK_SIZE_Z - 1 || z < 0) 
 	{
-		return world->getBlockAt((position.x * CHUNK_SIZE_X) + x, y, (position.y * CHUNK_SIZE_Z) + z, true);
+		return world->getBlockAt((position.x * CHUNK_SIZE_X) + x, (position.y * CHUNK_SIZE_Y) + y, (position.z * CHUNK_SIZE_Z) + z, true);
 	}
 	return blocks[x][y][z];
 }
@@ -152,7 +152,7 @@ unsigned char Chunk::getGenerateBlockAt(SplinedGenerator& noise, int x, int y, i
 	float caveMultiplier = ((terrainHeight - y) / (float)terrainHeight);
 	if (caveMultiplier < 0.75f) caveMultiplier = 0.75f;
 	float cavesMod = noise.get3DNoise(x * 3.0f, y * 7.0f, z * 3.0f) * 1.0f;
-	if (cavesMod > 0.4f && y > 2)
+	if (cavesMod > 0.3f)
 	{
 		return 0;
 	}
@@ -172,12 +172,7 @@ unsigned char Chunk::getGenerateBlockAt(SplinedGenerator& noise, int x, int y, i
 	}
 	else if (y < height - 2)
 	{
-		if (y != 0) 
-		{
-			return 3;
-		}
-
-		return 4;
+		return 3;
 	}
 }
 
