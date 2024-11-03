@@ -57,6 +57,7 @@ void Chunk::doGenerateChunk()
 	}
 
 	
+	/*
 	for (int x = 0; x < CHUNK_SIZE_X; x += 2)
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z += 2)
@@ -73,7 +74,7 @@ void Chunk::doGenerateChunk()
 			}
 		}
 	}
-	
+	*/
 	generated.store(true);
 }
 
@@ -232,7 +233,7 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 						int posY = voxelVerts[i + 1] + y;
 						int posZ = voxelVerts[i + 2] + z + 1;
 
-						vertexData.push_back(ChunkVertex{ posX | posY << 5 | posZ << 14 | faceIndex << 19, uvs[uvCounter], uvs[uvCounter + 1]});
+						vertexData.push_back(ChunkVertex{ posX | posY << 6 | posZ << 12 | faceIndex << 18, uvs[uvCounter], uvs[uvCounter + 1]});
 
 						uvCounter += 2;
 					}

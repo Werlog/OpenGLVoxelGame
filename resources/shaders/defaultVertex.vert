@@ -22,10 +22,10 @@ vec3 voxelNormals[6] = vec3[6](
 
 void main()
 {
-	int positionX = data & 31;
-	int positionY = (data >> 5) & 511;
-	int positionZ = (data >> 14) & 31;
-	int faceIndex = (data >> 19) & 7;
+	int positionX = data & 63;
+	int positionY = (data >> 6) & 63;
+	int positionZ = (data >> 12) & 63;
+	int faceIndex = (data >> 18) & 7;
 
 	vec3 normal = voxelNormals[faceIndex];
 	

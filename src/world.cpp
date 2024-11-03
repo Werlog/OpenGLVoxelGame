@@ -56,7 +56,7 @@ void World::update(Player& player, float deltaTime)
 {
 	if (isFirstTimeLoading)
 	{
-		player.position.y = 95.0f;
+		player.position.y = 30.0f;
 		player.velocity.y = 0.0f;
 	}
 	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
@@ -322,7 +322,7 @@ Chunk* World::getUnloadedChunkByCoordinate(ChunkCoord coord)
 
 unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = false)
 {
-	if (y < 0 || y > CHUNK_SIZE_Y) return 0;
+	if (y < 0 || y > CHUNK_SIZE_Y - 1) return 0;
 
 	ChunkCoord coord = ChunkCoord::toChunkCoord(glm::vec3(x, y, z));
 	Chunk* chunk = getChunkByCoordinate(coord);

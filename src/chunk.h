@@ -5,9 +5,9 @@
 #include "splinedgenerator.h"
 #include <atomic>
 
-constexpr int CHUNK_SIZE_X = 16;
-constexpr int CHUNK_SIZE_Y = 256;
-constexpr int CHUNK_SIZE_Z = 16;
+constexpr int CHUNK_SIZE_X = 32;
+constexpr int CHUNK_SIZE_Y = 32;
+constexpr int CHUNK_SIZE_Z = 32;
 
 constexpr int terrainHeight = 65;
 constexpr float heightNoiseScale = 2.00f;
