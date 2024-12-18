@@ -62,19 +62,18 @@ void Chunk::doGenerateChunk()
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z += 2)
 		{
-			float tree = generator->getBasicNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.y * CHUNK_SIZE_Z + z) * 30.0f);
+			float tree = generator->getBasicNoise((position.x * CHUNK_SIZE_X + x) * 30.0f, (position.z * CHUNK_SIZE_Z + z) * 30.0f);
 			if (tree > 0.68f)
 			{
-				float heightMod = generator->get2DSplinedNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.y * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
+				float heightMod = generator->get2DSplinedNoise((x + position.x * CHUNK_SIZE_X) * heightNoiseScale, (z + position.z * CHUNK_SIZE_Z) * heightNoiseScale) * heightNoiseMultiplier;
 				int height = terrainHeight + heightMod;
-				if (blocks[x][height][z] == 0) continue;
 				float treeHeight = (1 - tree) * 30.0f;
 				if (treeHeight < 5.0f) treeHeight = 5.0f;
-				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.y * CHUNK_SIZE_Z + z, treeHeight));
+				world->addBlockMods(generateTree(position.x * CHUNK_SIZE_X + x, height + 1, position.z * CHUNK_SIZE_Z + z, treeHeight));
 			}
 		}
-	}
-	*/
+	}*/
+	
 	generated.store(true);
 }
 
@@ -127,11 +126,12 @@ std::vector<BlockMod> Chunk::generateTree(int xPos, int yPos, int zPos, int heig
 					if (x == 0 && z == 0 && y != height - 1) continue;
 
 					int chunkX = xPos + x - position.x * CHUNK_SIZE_X;
-					int chunkZ = zPos + z - position.y * CHUNK_SIZE_Z;
+					int chunkY = yPos + y - position.y * CHUNK_SIZE_Y;
+					int chunkZ = zPos + z - position.z * CHUNK_SIZE_Z;
 
-					if (chunkX > -1 && chunkX < CHUNK_SIZE_X && chunkZ > -1 && chunkZ < CHUNK_SIZE_Z)
+					if (chunkX > -1 && chunkX < CHUNK_SIZE_X && chunkZ > -1 && chunkZ < CHUNK_SIZE_Z && chunkY > -1 && chunkY < CHUNK_SIZE_Y)
 					{
-						blocks[chunkX][yPos + y][chunkZ] = 8;
+						blocks[chunkX][chunkY][chunkZ] = 8;
 						continue;
 					}
 
@@ -185,9 +185,12 @@ void Chunk::updateMesh(TextureSheet& sheet)
 
 void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 {
+	CodeTimer updateMesh("Chunk Update");
 	isUpdating.store(true);
 	vertexData.clear();
 	indices.clear();
+	vertexData.reserve(8000);
+	indices.reserve(10000);
 	int curIndex = 0;
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
@@ -195,7 +198,7 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 		{
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
-				BlockType currentBlock = worldPallete->get(blocks[x][y][z]);
+				const BlockType& currentBlock = worldPallete->get(blocks[x][y][z]);
 				if (currentBlock.id == 0) {
 					continue;
 				}
@@ -212,14 +215,14 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 					int checkZ = faceChecks[checkIndex + 2] + z;
 
 					unsigned char block = getBlockAt(checkX, checkY, checkZ);
-					BlockType check = worldPallete->get(block);
+					const BlockType& check = worldPallete->get(block);
 					if (!check.isTransparent)
 					{
 						discardedFaces++;
 						continue;
 					}
 					
-					std::vector<float> uvs = textureSheet.getUVs(getTextureNumberFromFaceIndex(currentBlock, faceIndex));
+					const std::vector<float>& uvs = textureSheet.getUVs(getTextureNumberFromFaceIndex(currentBlock, faceIndex));
 
 					int uvCounter = 0;
 					for (size_t i = faceIndex * 12; i < (faceIndex + 1) * 12; i += 3)
@@ -289,7 +292,7 @@ void Chunk::renderChunk()
 	glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, 0);
 }
 
-int Chunk::getTextureNumberFromFaceIndex(BlockType& block, int faceIndex)
+int Chunk::getTextureNumberFromFaceIndex(const BlockType& block, int faceIndex)
 {
 	switch (faceIndex)
 	{

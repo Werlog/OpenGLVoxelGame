@@ -56,7 +56,7 @@ void World::update(Player& player, float deltaTime)
 {
 	if (isFirstTimeLoading)
 	{
-		player.position.y = 80.0f;
+		player.position.y = 100.0f;
 		player.velocity.y = 0.0f;
 	}
 	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
@@ -126,11 +126,11 @@ void World::update(Player& player, float deltaTime)
 void World::updateLoadedChunks(ChunkCoord& playerCoord)
 {
 	std::lock_guard lock(chunksMutex);
-	for (int x = -RENDER_DISTANCE; x < RENDER_DISTANCE; x++)
+	for (int x = -RENDER_DISTANCE; x <= RENDER_DISTANCE; x++)
 	{
-		for (int y = -VERTICAL_DISTANCE; y < VERTICAL_DISTANCE; y++)
+		for (int y = -VERTICAL_DISTANCE; y <= VERTICAL_DISTANCE; y++)
 		{
-			for (int z = -RENDER_DISTANCE; z < RENDER_DISTANCE; z++) 
+			for (int z = -RENDER_DISTANCE; z <= RENDER_DISTANCE; z++) 
 			{
 				ChunkCoord coord = ChunkCoord{ playerCoord.x + x, playerCoord.y + y, playerCoord.z + z };
 				Chunk* unloaded = getUnloadedChunkByCoordinate(coord);

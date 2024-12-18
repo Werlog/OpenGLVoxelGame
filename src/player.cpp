@@ -46,6 +46,11 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 		velocity.y = 0.0f;
 	}
 
+	if (world.getChunkByCoordinate(ChunkCoord::toChunkCoord(position)) == nullptr)
+	{
+		velocity = glm::vec3(0);
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && isGrounded && sinceJumped > playerJumpDelay)
 	{
 		velocity.y = 7.2f;

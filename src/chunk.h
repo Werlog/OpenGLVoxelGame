@@ -96,5 +96,5 @@ private:
 
 	void doUpdateMesh(TextureSheet& sheet);
 	void doGenerateChunk();
-	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
+	int getTextureNumberFromFaceIndex(const BlockType& block, int faceIndex);
 };

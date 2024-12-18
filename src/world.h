@@ -6,7 +6,7 @@
 #include <mutex>
 
 constexpr int RENDER_DISTANCE = 4;
-constexpr int VERTICAL_DISTANCE = 1;
+constexpr int VERTICAL_DISTANCE = 2;
 constexpr float loadChunkDelay = 0.0f;
 
 class Player;
