@@ -23,7 +23,7 @@ void BlockPalette::registerBlocks()
 	pallete.insert({ leaves.id, leaves });
 }
 
-BlockType BlockPalette::get(unsigned char blockId)
+const BlockType& BlockPalette::get(unsigned char blockId)
 {
 	if (pallete.count(blockId) != 0)
 		return pallete[blockId];

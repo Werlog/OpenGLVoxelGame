@@ -23,5 +23,5 @@ void CodeTimer::Stop()
 
 	double milliseconds = duration * 0.001;
 
-	std::cout << taskName << " Finished, time elapsed: " << milliseconds << " ms." << std::endl;
+	std::cout << taskName << " Finished, time elapsed: " << milliseconds << " ms.\n";
 }

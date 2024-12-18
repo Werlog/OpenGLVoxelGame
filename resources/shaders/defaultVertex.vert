@@ -30,7 +30,7 @@ void main()
 	vec3 normal = voxelNormals[faceIndex];
 	
 	lightIntensity = max(dot(normal, lightDirection), 0.0f);
-	lightIntensity += 0.7f; // Ambient
+	lightIntensity += 0.65f; // Ambient
 	lightIntensity = min(lightIntensity, 1.04f);
 	
 

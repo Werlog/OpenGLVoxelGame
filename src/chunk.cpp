@@ -84,7 +84,7 @@ void Chunk::generateChunk()
 	generateThread.detach();
 }
 
-unsigned char Chunk::getBlockAt(int x, int y, int z)
+inline unsigned char Chunk::getBlockAt(int x, int y, int z)
 {
 	if (x > CHUNK_SIZE_X - 1 || x < 0 || y > CHUNK_SIZE_Y - 1 || y < 0 || z > CHUNK_SIZE_Z - 1 || z < 0) 
 	{
@@ -199,7 +199,7 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 		{
 			for (int z = 0; z < CHUNK_SIZE_Z; z++)
 			{
-				BlockType currentBlock = worldPallete->get(blocks[x][y][z]);
+				const BlockType& currentBlock = worldPallete->get(blocks[x][y][z]);
 				if (currentBlock.id == 0) {
 					continue;
 				}
@@ -216,7 +216,7 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 					int checkZ = faceChecks[checkIndex + 2] + z;
 
 					unsigned char block = getBlockAt(checkX, checkY, checkZ);
-					BlockType check = worldPallete->get(block);
+					const BlockType& check = worldPallete->get(block);
 					if (!check.isTransparent)
 					{
 						discardedFaces++;
@@ -293,7 +293,7 @@ void Chunk::renderChunk()
 	glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, 0);
 }
 
-int Chunk::getTextureNumberFromFaceIndex(BlockType& block, int faceIndex)
+int Chunk::getTextureNumberFromFaceIndex(const BlockType& block, int faceIndex)
 {
 	switch (faceIndex)
 	{

@@ -7,7 +7,7 @@ class BlockPalette
 {
 public:
 	void registerBlocks();
-	BlockType get(unsigned char blockId);
+	const BlockType& get(unsigned char blockId);
 private:
 	std::unordered_map<unsigned char, BlockType> pallete;
 };

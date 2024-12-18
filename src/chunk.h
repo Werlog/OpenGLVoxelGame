@@ -71,7 +71,7 @@ public:
 	~Chunk();
 
 	void generateChunk();
-	unsigned char getBlockAt(int x, int y, int z);
+	inline unsigned char getBlockAt(int x, int y, int z);
 	void setBlockAt(int x, int y, int z, unsigned char blockType);
 	void setBlockAtDontUpdate(int x, int y, int z, unsigned char blockType);
 	std::vector<BlockMod> generateTree(int x, int y, int z, int height);
@@ -94,5 +94,5 @@ private:
 
 	void doUpdateMesh(TextureSheet& sheet);
 	void doGenerateChunk();
-	int getTextureNumberFromFaceIndex(BlockType& block, int faceIndex);
+	int getTextureNumberFromFaceIndex(const BlockType& block, int faceIndex);
 };
