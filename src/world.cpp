@@ -11,6 +11,8 @@
 #include <random>
 #include <limits>
 
+constexpr int loadDirections[4][2] = { {1, 0}, {0, 1}, {-1, 0}, {0, -1} };
+
 World::World(BlockPalette* pallete, TextureSheet* sheet, Player& player, int shaderHandle)
 {
 	this->pallete = pallete;
@@ -49,14 +51,77 @@ void World::createWorld()
 
 void World::update(Player& player, float deltaTime)
 {
+	player.position = glm::vec3(player.position.x, 100.0f, player.position.z);
 	ChunkCoord playerCoord = ChunkCoord::toChunkCoord(player.position);
+	
+	if (playerCoord != lastPlayerChunkCoord)
+	{
+		updateLoadedChunks(playerCoord);
+	}
+	{
+		std::lock_guard lock(chunksMutex);
+		for (size_t i = 0; i < loadingChunks.size(); i++)
+		{
+			Chunk* chunk = loadingChunks[i];
+			if (!chunk->isChunkLoaded.load()) continue;
 
+			chunk->createMesh();
+			loadedChunks.push_back(chunk);
+			loadingChunks.erase(loadingChunks.begin() + i);
+			i--;
+		}
+		while (loadingChunks.size() < MAX_ASYNC_CHUNK_LOAD && !chunksToLoad.empty())
+		{
+			ChunkCoord coord = chunksToLoad.front();
+			chunksToLoad.pop_front();
+			Chunk* chunk = new Chunk(pallete, this, coord, &splinedGenerator);
+			chunk->loadChunk(*sheet);
+			loadingChunks.push_back(chunk);
+		}
+	}
 }
 
 void World::updateLoadedChunks(ChunkCoord& playerCoord)
 {
 	std::lock_guard lock(chunksMutex);
 
+	std::queue<ChunkCoord> coordsToLoad;
+	std::vector<ChunkCoord> visited;
+
+	coordsToLoad.push(playerCoord);
+	int total = 0;
+	bool isInitial = true;
+	while (!coordsToLoad.empty())
+	{
+		ChunkCoord coord = coordsToLoad.front();
+		coordsToLoad.pop();
+
+		if (!isInitial && !chunkExists(coord) && std::find(chunksToLoad.begin(), chunksToLoad.end(), coord) == chunksToLoad.end())
+		{
+			chunksToLoad.push_back(coord);
+			total++;
+		}
+		else
+		{
+			isInitial = false;
+		}
+
+		for (const auto& direction : loadDirections)
+		{
+			ChunkCoord newCoord = ChunkCoord{ coord.x + direction[0], coord.y + direction[1] };
+
+			float xDiff = newCoord.x - playerCoord.x;
+			float yDiff = newCoord.y - playerCoord.y;
+			bool pass = abs(xDiff) <= RENDER_DISTANCE && abs(yDiff) <= RENDER_DISTANCE;
+			if (pass && std::find(visited.begin(), visited.end(), newCoord) == visited.end())
+			{
+				coordsToLoad.push(newCoord);
+				visited.push_back(newCoord);
+			}
+		}
+	}
+	lastPlayerChunkCoord = playerCoord;
+	std::cout << total << std::endl;
 }
 
 void World::unloadChunks()
@@ -144,6 +209,27 @@ Chunk* World::getChunkByCoordinate(ChunkCoord coord)
 	}
 
 	return nullptr;
+}
+
+bool World::chunkExists(ChunkCoord coord)
+{
+	for (size_t i = 0; i < loadedChunks.size(); i++)
+	{
+		if (coord == loadedChunks[i]->position)
+		{
+			return true;
+		}
+	}
+
+	for (size_t i = 0; i < loadingChunks.size(); i++)
+	{
+		if (coord == loadingChunks[i]->position)
+		{
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 unsigned char World::getBlockAt(int x, int y, int z, bool includeNotGenerated = false)

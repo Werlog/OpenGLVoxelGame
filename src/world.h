@@ -6,6 +6,7 @@
 #include <mutex>
 
 constexpr int RENDER_DISTANCE = 10;
+constexpr int MAX_ASYNC_CHUNK_LOAD = 2; // How many chunks to load at once, setting too high causes CPU to wanna unalive itself (significant slowdown)
 
 class Player;
 
@@ -33,9 +34,11 @@ public:
 	unsigned char getBlockAt(float x, float y, float z);
 
 	Chunk* getChunkByCoordinate(ChunkCoord coord);
+	bool chunkExists(ChunkCoord coord);
 private:
 	std::vector<Chunk*> loadedChunks;
 	std::vector<Chunk*> loadingChunks;
+	std::deque<ChunkCoord> chunksToLoad;
 
 	SplinedGenerator splinedGenerator;
 

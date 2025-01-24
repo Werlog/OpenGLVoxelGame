@@ -61,11 +61,14 @@ class Chunk
 {
 public:
 	ChunkCoord position;
-	std::atomic<bool> isLoaded;
+	std::atomic<bool> isChunkLoaded;
+
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
 	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, SplinedGenerator* generator);
 	~Chunk();
+
+	void loadChunk(TextureSheet& sheet);
 
 	void generateChunk();
 	inline unsigned char getBlockAt(int x, int y, int z);
@@ -91,5 +94,6 @@ private:
 
 	void doUpdateMesh(TextureSheet& sheet);
 	void doGenerateChunk();
+	void doLoadChunk(TextureSheet& sheet);
 	int getTextureNumberFromFaceIndex(const BlockType& block, int faceIndex);
 };

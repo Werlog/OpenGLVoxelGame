@@ -13,6 +13,7 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, Spli
 	this->position = position;
 	this->generator = generator;
 	this->world = world;
+	this->isChunkLoaded.store(false);
 
 
 	std::memset(blocks, 0, sizeof(blocks));
@@ -39,9 +40,22 @@ Chunk::~Chunk()
 	}
 }
 
+void Chunk::loadChunk(TextureSheet& sheet)
+{
+	std::thread loadThread = std::thread(&Chunk::doLoadChunk, this, sheet);
+	loadThread.detach();
+}
+
+void Chunk::doLoadChunk(TextureSheet& sheet)
+{
+	CodeTimer loadTimer = CodeTimer("Chunk Loading");
+	doGenerateChunk();
+	doUpdateMesh(sheet);
+	isChunkLoaded.store(true);
+}
+
 void Chunk::doGenerateChunk()
 {
-	CodeTimer genTimer = CodeTimer("Chunk Generation");
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE_Y; y++)
