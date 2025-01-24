@@ -34,7 +34,8 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	glm::vec3 right = glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glm::vec3 movementDirection = inputDirection.z * forward + inputDirection.x * right;
-	if (glm::length(movementDirection) > 0.0f) {
+	if (glm::length(movementDirection) > 0.0f) 
+	{
 		movementDirection = glm::normalize(movementDirection);
 	}
 
@@ -80,6 +81,7 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	ImGui::Text("Chunk Coord: %d %d", coord.x, coord.y);
 	glm::vec3 blockPos = getLookingAtBlockPos(world);
 	ImGui::Text("Looking at: %f %f %f", blockPos.x, blockPos.y, blockPos.z);
+	ImGui::Text("FPS: %d", (int)floor(1.0f / deltaTime));
 	ImGui::End();
 
 	lastPos = position;
