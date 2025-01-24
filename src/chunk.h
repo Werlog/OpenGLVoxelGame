@@ -61,10 +61,7 @@ class Chunk
 {
 public:
 	ChunkCoord position;
-	std::atomic<bool> generated;
-	std::atomic<bool> readyToUpdate;
-	std::atomic<bool> isUpdating;
-	bool modified;
+	std::atomic<bool> isLoaded;
 	unsigned char blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
 	Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, SplinedGenerator* generator);

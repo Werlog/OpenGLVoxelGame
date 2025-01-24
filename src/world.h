@@ -6,7 +6,6 @@
 #include <mutex>
 
 constexpr int RENDER_DISTANCE = 10;
-constexpr float loadChunkDelay = 0.0f;
 
 class Player;
 
@@ -22,27 +21,23 @@ public:
 	void update(Player& player, float deltaTime);
 	void updateLoadedChunks(ChunkCoord& playerCoord);
 	void unloadChunks();
+
 	void renderWorld(Player& player);
+
 	void addBlockMods(std::vector<BlockMod>& mods);
 	void applyBlockMods(bool updateChunks);
+
 	void modifyBlockAt(int x, int y, int z, unsigned char newBlockType);
+
 	unsigned char getBlockAt(int x, int y, int z, bool includeNotGenerated);
 	unsigned char getBlockAt(float x, float y, float z);
+
 	Chunk* getChunkByCoordinate(ChunkCoord coord);
-	Chunk* getUnloadedChunkByCoordinate(ChunkCoord coord);
 private:
 	std::vector<Chunk*> loadedChunks;
-	std::vector<Chunk*> unloadedChunks;
-	std::deque<Chunk*> chunksToLoad;
-	std::vector<Chunk*> chunksToUnload;
-	std::deque<Chunk*> chunksToUpdate;
+	std::vector<Chunk*> loadingChunks;
 
 	SplinedGenerator splinedGenerator;
-
-	float sinceLoadedChunk;
-	bool isFirstTimeLoading;
-	bool isGenerating;
-	bool isUpdatingChunk;
 
 	int shaderProgram;
 	int shaderModelLoc;

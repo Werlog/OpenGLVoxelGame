@@ -13,9 +13,6 @@ Chunk::Chunk(BlockPalette* worldPallete, World* world, ChunkCoord position, Spli
 	this->position = position;
 	this->generator = generator;
 	this->world = world;
-	this->modified = false;
-	this->generated.store(false);
-	this->readyToUpdate.store(true);
 
 
 	std::memset(blocks, 0, sizeof(blocks));
@@ -73,8 +70,6 @@ void Chunk::doGenerateChunk()
 			}
 		}
 	}
-	
-	generated.store(true);
 }
 
 void Chunk::generateChunk()
@@ -182,14 +177,12 @@ unsigned char Chunk::getGenerateBlockAt(SplinedGenerator& noise, int x, int y, i
 
 void Chunk::updateMesh(TextureSheet& sheet)
 {
-	readyToUpdate.store(false);
 	std::thread updateThread = std::thread(&Chunk::doUpdateMesh, this, sheet);
 	updateThread.detach();
 }
 
 void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 {
-	isUpdating.store(true);
 	vertexData.clear();
 	indices.clear();
 	int curIndex = 0;
@@ -249,14 +242,10 @@ void Chunk::doUpdateMesh(TextureSheet& textureSheet)
 		}
 	}
 	indicesCount = indices.size();
-
-	readyToUpdate.store(true);
-	isUpdating.store(false);
 }
 
 void Chunk::createMesh()
 {
-	if (!readyToUpdate.load()) return;
 	if (VAO == 0)
 	{
 		glGenVertexArrays(1, &VAO);
