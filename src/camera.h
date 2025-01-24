@@ -32,6 +32,9 @@ public:
 	void ProccessKeyboard(CameraMovement movement, float deltaTime);
 	void ProccessMouse(float mouseX, float mouseY, bool constrainPitch = true);
 	void updateProjectionMatrix(float aspectRatio);
+
+	float getYaw() const;
+	float getPitch() const;
 private:
 	float lastMouseX, lastMouseY;
 	bool firstMouse;

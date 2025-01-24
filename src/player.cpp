@@ -27,13 +27,16 @@ void Player::update(float deltaTime, GLFWwindow* window, World& world)
 	blockBreakLogic(window, world);
 	blockPlaceLogic(window, world);
 
-	glm::vec3 forward = glm::vec3(camera.front.x, camera.front.y, camera.front.z);
-	glm::vec3 right = glm::vec3(camera.right.x, camera.right.y, camera.right.z);
+	float yaw = camera.getYaw();
+	float pitch = camera.getPitch();
 
-	glm::vec3 movementDirection = forward * inputDirection.z + right * inputDirection.x;
-	movementDirection.y = 0;
-	if (movementDirection != glm::vec3(0))
+	glm::vec3 forward = glm::vec3(cos(glm::radians(yaw)), 0.0f, sin(glm::radians(yaw)));
+	glm::vec3 right = glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::vec3 movementDirection = inputDirection.z * forward + inputDirection.x * right;
+	if (glm::length(movementDirection) > 0.0f) {
 		movementDirection = glm::normalize(movementDirection);
+	}
 
 	movementDirection *= playerSpeed;
 

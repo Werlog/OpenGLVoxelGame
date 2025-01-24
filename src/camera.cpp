@@ -85,6 +85,16 @@ void Camera::updateProjectionMatrix(float aspectRatio)
 	projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 }
 
+float Camera::getYaw() const
+{
+	return yaw;
+}
+
+float Camera::getPitch() const
+{
+	return pitch;
+}
+
 glm::mat4 Camera::getProjectionMatrix()
 {
 	return projectionMatrix;
